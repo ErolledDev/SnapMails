@@ -1,3 +1,5 @@
+![SnapMails - Temporary disposable Email](https://raw.githubusercontent.com/ErolledDev/SnapMails/refs/heads/main/public/desktop-view.jpg)
+
 # SnapMails - Temporary Email Service
 
 SnapMails is your secure, easy-to-use temporary email service. Get instant disposable email addresses to protect your privacy and keep your real inbox spam-free.
