@@ -1,109 +1,123 @@
-# TempMail Pro
+# SnapMails - Temporary Email Service
 
-A modern, secure disposable email service built with React and the Guerrilla Mail API.
+SnapMails is your secure, easy-to-use temporary email service. Get instant disposable email addresses to protect your privacy and keep your real inbox spam-free.
 
-## 🚀 Features
+## 🌟 What is SnapMails?
 
-- **Instant Email Creation**: Get disposable email addresses instantly
-- **First Session Customization**: Customize your email address during your first session
-- **Real-time Reception**: Instant email delivery and automatic refresh
-- **Privacy Focused**: No registration, no personal data stored
-- **Mobile Responsive**: Perfect experience on all devices
-- **SEO Optimized**: High visibility in search engines
+A free service that gives you temporary email addresses for:
+- Signing up to websites
+- Protecting your real email from spam
+- Testing services
+- Temporary communication
 
-## 🛠️ Tech Stack
+## 📱 Key Features
 
-- **Frontend**: React 18 with TypeScript
-- **Styling**: Tailwind CSS
-- **Routing**: React Router
-- **Icons**: Lucide React
-- **Build Tool**: Vite
-- **API**: Guerrilla Mail
+### For Users
+- **Instant Access**: No registration needed
+- **Custom Emails**: Choose your email address
+- **Multiple Domains**: Choose from different email domains
+- **Dark Mode**: Easy on your eyes
+- **Mobile Friendly**: Works great on all devices
+- **Auto-Refresh**: See new emails instantly
+- **24-Hour Storage**: Emails auto-delete for privacy
+
+### Privacy & Security
+- No registration required
+- No personal data stored
+- Automatic email deletion
+- Encrypted communication
+- Privacy-first approach
+
+## 🚀 Getting Started
+
+1. **Visit the Website**
+   - Go to [SnapMails.xyz](https://snapmails.xyz)
+   - Get an instant email address
+
+2. **Customize Your Email** (Optional)
+   - Click the edit icon
+   - Choose your preferred username
+   - Save changes
+
+3. **Start Using**
+   - Copy your email address
+   - Use it where needed
+   - Receive emails instantly
+
+## 📱 Mobile App
+
+Install SnapMails as a mobile app:
+1. Visit on your phone
+2. Click "Add to Home Screen"
+3. Use like a regular app!
+
+## 🤔 Common Questions
+
+### How long do emails last?
+Emails automatically delete after 24 hours.
+
+### Is it really free?
+Yes! No payment or registration needed.
+
+### Can I send emails?
+No, SnapMails is for receiving emails only.
+
+### Is it safe?
+Yes! We use encryption and don't store personal data.
+
+## 🆘 Need Help?
+
+- Check our [FAQ](https://snapmails.xyz/faq)
+- Email: support@snapmails.xyz
+- Visit: [Help Center](https://snapmails.xyz/help)
+
+## 📜 Legal
+
+- [Privacy Policy](https://snapmails.xyz/privacy)
+- [Terms of Service](https://snapmails.xyz/terms)
 
 ## ⚡ Performance
 
-- Optimized bundle size with code splitting
-- Lazy loaded components
-- Efficient re-rendering
-- Cached email sessions
-- Compressed assets
-- Performance-optimized animations
-
-## 🔒 Security
-
-- Rate limiting for email customization
-- Session-based access control
-- Secure cookie handling
-- XSS protection
-- CORS compliance
-- Input validation
-
-## 🌐 SEO Features
-
-- Semantic HTML structure
-- Meta tags optimization
-- Open Graph support
-- Mobile-first design
 - Fast loading times
-- Structured data
-- XML sitemap
-- Robots.txt configuration
+- Works offline
+- Mobile optimized
+- Automatic updates
 
-## 📱 Mobile Support
+## 🌐 Supported Browsers
 
-- Responsive design
-- Touch-friendly interface
-- Optimized for all screen sizes
-- Fast mobile performance
-- Accessible on all devices
+- Google Chrome
+- Mozilla Firefox
+- Safari
+- Microsoft Edge
+- Any modern browser
 
-## 🎯 Core Functionality
+## 🔒 Privacy Features
 
-- Temporary email generation
-- Email customization (first session)
-- Real-time email reception
-- Copy to clipboard
-- Domain selection
-- Auto-refresh
+- No tracking
+- No personal data collection
+- Automatic email deletion
+- Secure connections
+- Privacy-focused design
 
-## 📈 Performance Metrics
+## 💡 Tips
 
-- Lighthouse Score: 95+
-- First Contentful Paint: < 1.5s
-- Time to Interactive: < 2s
-- Cumulative Layout Shift: < 0.1
-- First Input Delay: < 100ms
+1. **Save Important Info**
+   - Screenshot important emails
+   - Download attachments quickly
+   - Copy important text
 
-## 🔍 SEO Best Practices
+2. **Best Practices**
+   - Don't use for important accounts
+   - Check emails regularly
+   - Use for temporary needs only
 
-1. **Meta Tags**
-   - Unique titles and descriptions
-   - Proper heading hierarchy
-   - Alt text for images
+3. **Troubleshooting**
+   - Refresh if emails don't show
+   - Clear cache if issues occur
+   - Try incognito mode if needed
 
-2. **Technical SEO**
-   - Mobile-friendly design
-   - Fast loading times
-   - HTTPS enabled
-   - XML sitemap
-   - Clean URLs
-
-3. **Content**
-   - High-quality, unique content
-   - Clear value proposition
-   - Regular updates
-   - Proper keyword usage
-
-4. **User Experience**
-   - Easy navigation
-   - Clear calls to action
-   - Fast response times
-   - Error handling
-
-## License
-
-MIT License - see LICENSE file for details
+Made with ❤️ for your privacy
 
 ---
 
-Made with ❤️ for privacy-conscious users
+© 2025 SnapMails. All rights reserved.
