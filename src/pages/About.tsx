@@ -4,7 +4,7 @@ import { Shield, Users, Globe } from 'lucide-react';
 export default function About() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
-      <h1 className="text-4xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">About TempMail Pro</h1>
+      <h1 className="text-4xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">About SnapMails</h1>
       
       <div className="prose prose-lg mx-auto">
         <p className="lead text-xl text-gray-600 mb-8">

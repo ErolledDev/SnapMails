@@ -11,7 +11,7 @@ const generateStaticFiles = () => {
     '/privacy',
     '/terms',
     '/faq',
-    '/404'  // Add 404 page to static generation
+    '/404'
   ];
 
   routes.forEach(route => {
@@ -23,9 +23,11 @@ const generateStaticFiles = () => {
   });
 };
 
-// Generate sitemap.xml
+// Generate sitemap.xml with current date
 const generateSitemap = () => {
   const baseUrl = 'https://snapmails.xyz';
+  const currentDate = new Date().toISOString().split('T')[0];
+  
   const pages = [
     { url: '/', priority: '1.0', changefreq: 'daily' },
     { url: '/features', priority: '0.8', changefreq: 'weekly' },
@@ -39,13 +41,61 @@ const generateSitemap = () => {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${pages.map(page => `  <url>
     <loc>${baseUrl}${page.url}</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <lastmod>${currentDate}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
   </url>`).join('\n')}
 </urlset>`;
 
   fs.writeFileSync('dist/sitemap.xml', sitemap);
+};
+
+// Generate robots.txt
+const generateRobotsTxt = () => {
+  const robotsTxt = `# robots.txt for SnapMails
+User-agent: *
+Allow: /
+Allow: /features
+Allow: /about
+Allow: /privacy
+Allow: /terms
+Allow: /faq
+
+# Block access to API endpoints and sensitive directories
+Disallow: /api/
+Disallow: /.git/
+Disallow: /node_modules/
+Disallow: /.env
+Disallow: /.env.*
+
+# Crawl delay to prevent server overload
+Crawl-delay: 10
+
+# Sitemap location
+Sitemap: https://snapmails.xyz/sitemap.xml
+
+# Additional rules for specific bots
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+# Block archive.org bot
+User-agent: ia_archiver
+Disallow: /
+
+# Block potentially harmful bots
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /`;
+
+  fs.writeFileSync('dist/robots.txt', robotsTxt);
 };
 
 export default defineConfig({
@@ -56,6 +106,7 @@ export default defineConfig({
       closeBundle() {
         generateStaticFiles();
         generateSitemap();
+        generateRobotsTxt();
       },
     }
   ],
@@ -88,7 +139,8 @@ export default defineConfig({
       'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+      'Content-Security-Policy': "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:;"
     },
     compression: true
   },
@@ -99,7 +151,8 @@ export default defineConfig({
       'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+      'Content-Security-Policy': "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:;"
     },
     compression: true
   }
