@@ -1,4 +1,5 @@
 // Guerrilla Mail API client
+// Implements Guerrilla Mail JSON API v1.6
 import { generateEmailUser } from './words';
 
 const API_BASE = 'https://api.guerrillamail.com/ajax.php';
