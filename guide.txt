@@ -1,0 +1,109 @@
+# SnapMails Developer Guide
+
+[Previous sections remain unchanged...]
+
+## PWA and Meta Tags Requirements
+
+1. Required Images
+   - Icon sizes needed:
+     - 192x192 (required for PWA): `/public/icon-192x192.png`
+     - 512x512 (required for PWA): `/public/icon-512x512.png`
+     - OG image (1200x630): `/public/og-image.jpg`
+     - Twitter image (1200x600): `/public/twitter-image.jpg`
+     - Favicon (SVG preferred): `/public/vite.svg`
+
+2. Image Specifications
+   - PWA Icons:
+     - Format: PNG
+     - Background: Transparent or solid
+     - Safe area: Keep main content within 80% of dimensions
+     - File size: Optimize under 100KB
+     - Color space: sRGB
+     - Purpose: Add `maskable` for adaptive icons
+
+3. Meta Tags Implementation
+   ```html
+   <!-- PWA Meta Tags -->
+   <meta name="theme-color" content="#3B82F6" />
+   <meta name="apple-mobile-web-app-capable" content="yes" />
+   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+   <link rel="manifest" href="/manifest.json" />
+   <link rel="apple-touch-icon" href="/icon-192x192.png" />
+   
+   <!-- Primary Meta Tags -->
+   <title>SnapMails - Secure & Customizable Disposable Email Service</title>
+   <meta name="title" content="SnapMails - Secure & Customizable Disposable Email Service" />
+   <meta name="description" content="Get instant disposable email addresses with unique customization features. Protect your real inbox from spam with SnapMails's secure temporary email service." />
+   <meta name="keywords" content="temporary email, disposable email, temp mail, anonymous email, spam protection, custom email, temporary mail service, secure email" />
+   
+   <!-- Open Graph / Facebook -->
+   <meta property="og:type" content="website" />
+   <meta property="og:url" content="https://snapmails.netlify.app" />
+   <meta property="og:title" content="SnapMails - Secure & Customizable Disposable Email Service" />
+   <meta property="og:description" content="Get instant disposable email addresses with unique customization features. Protect your real inbox from spam with SnapMails's secure temporary email service." />
+   <meta property="og:image" content="https://snapmails.netlify.app/og-image.jpg" />
+   
+   <!-- Twitter -->
+   <meta property="twitter:card" content="summary_large_image" />
+   <meta property="twitter:url" content="https://snapmails.netlify.app" />
+   <meta property="twitter:title" content="SnapMails - Secure & Customizable Disposable Email Service" />
+   <meta property="twitter:description" content="Get instant disposable email addresses with unique customization features. Protect your real inbox from spam with SnapMails's secure temporary email service." />
+   <meta property="twitter:image" content="https://snapmails.netlify.app/twitter-image.jpg" />
+   ```
+
+4. Manifest File Requirements
+   ```json
+   {
+     "name": "SnapMails",
+     "short_name": "SnapMails",
+     "description": "Secure & Customizable Disposable Email Service",
+     "start_url": "/",
+     "display": "standalone",
+     "background_color": "#ffffff",
+     "theme_color": "#3B82F6",
+     "icons": [
+       {
+         "src": "/icon-192x192.png",
+         "sizes": "192x192",
+         "type": "image/png",
+         "purpose": "any maskable"
+       },
+       {
+         "src": "/icon-512x512.png",
+         "sizes": "512x512",
+         "type": "image/png",
+         "purpose": "any maskable"
+       }
+     ]
+   }
+   ```
+
+5. Image Design Guidelines
+   - Use consistent branding
+   - Maintain clear visibility at small sizes
+   - Test icons on different backgrounds
+   - Ensure proper padding
+   - Use vector sources when possible
+   - Optimize for file size
+   - Follow platform-specific guidelines
+
+6. Testing Checklist
+   - Verify all images load correctly
+   - Check meta tags with validation tools
+   - Test PWA installation
+   - Verify social media previews
+   - Check favicon across browsers
+   - Test maskable icons
+   - Validate manifest file
+
+7. Performance Considerations
+   - Optimize all images
+   - Use appropriate image formats
+   - Implement lazy loading
+   - Cache PWA assets
+   - Monitor loading times
+   - Consider CDN usage
+
+Remember: All images should be placed in the `/public` directory to ensure they're properly served and accessible after building the application.
+
+[Previous sections continue unchanged...]
