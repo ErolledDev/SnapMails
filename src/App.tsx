@@ -27,7 +27,7 @@ const Home: React.FC = () => {
                 The only customizable temporary email service. Keep your real inbox clean and secure with instant disposable email addresses for temporary use.
               </p>
               <div className="inline-block bg-blue-50 dark:bg-blue-900/50 rounded-full px-6 py-2 text-blue-700 dark:text-blue-200 font-medium border border-blue-100 dark:border-blue-800">
-                Customize your email address in your first session
+                Customize your email address in your first session, 60mins Cooldown 
               </div>
             </div>
             <div className="flex flex-wrap gap-6 justify-center mt-12 mb-12">
