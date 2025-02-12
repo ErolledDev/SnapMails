@@ -51,7 +51,7 @@ export default function Features() {
         <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
           Powerful Features
         </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-700 dark:text-gray-200 max-w-2xl mx-auto mb-8 leading-relaxed">
           Discover what makes SnapMails the most versatile temporary email service available.
         </p>
       </div>

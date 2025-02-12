@@ -47,7 +47,7 @@ export default function FAQ() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-16" role="main">
-      <h1 className="text-4xl font-bold text-center mb-8">Frequently Asked Questions</h1>
+      <h1 className="text-center text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Frequently Asked Questions</h1>
       
       <div className="space-y-6">
         {faqs.map((faq, index) => (
