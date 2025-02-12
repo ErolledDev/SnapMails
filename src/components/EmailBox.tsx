@@ -66,8 +66,9 @@ const EditButton: React.FC<{ onClick: () => void; disabled: boolean }> = ({ onCl
       }`}
       title={disabled ? `Wait ${remainingMinutes} minutes to customize` : 'Change Email'}
       disabled={disabled}
+      aria-label={disabled ? `Wait ${remainingMinutes} minutes to customize email` : 'Change email address'}
     >
-      <Edit2 className={`w-4 h-4 ${disabled ? 'text-gray-400' : ''}`} />
+      <Edit2 className={`w-4 h-4 ${disabled ? 'text-gray-400' : ''}`} aria-hidden="true" />
       {disabled && remainingMinutes > 0 && (
         <div className="hidden group-hover:block absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap z-50">
           <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
@@ -373,28 +374,30 @@ const EmailBox = () => {
           <div className="flex gap-2 items-center">
             {!canCustomize && (
               <div className="flex items-center text-sm text-amber-600 font-medium">
-                <AlertCircle className="w-4 h-4 mr-1" />
+                <AlertCircle className="w-4 h-4 mr-1" aria-hidden="true" />
                 Customization locked
               </div>
             )}
             <button 
               onClick={handleRefresh} 
               className="p-2 hover:bg-gray-100 rounded-full transition-transform duration-300 hover:rotate-180" 
-              title="Refresh"
+              title="Refresh emails"
+              aria-label="Refresh emails"
               disabled={loading}
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
             </button>
             <div className="relative">
               <button 
                 onClick={handleCopy} 
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors" 
-                title="Copy"
+                title="Copy email address"
+                aria-label="Copy email address to clipboard"
               >
-                <Copy className="w-4 h-4" />
+                <Copy className="w-4 h-4" aria-hidden="true" />
               </button>
               {showCopied && (
-                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg animate-fade-in-out">
+                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg animate-fade-in-out" role="status">
                   Copied!
                 </div>
               )}
@@ -408,21 +411,24 @@ const EmailBox = () => {
         {isEditing ? (
           <form onSubmit={handleEmailChange} className="space-y-4">
             <div className="flex-1">
+              <label htmlFor="email-username" className="sr-only">Email username</label>
               <div className="flex items-center gap-2">
                 <input
+                  id="email-username"
                   type="text"
                   value={newEmailUser}
                   onChange={(e) => setNewEmailUser(e.target.value)}
                   className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter new email username"
+                  aria-label="New email username"
                 />
-                <span className="text-sm text-gray-500 whitespace-nowrap">{EMAIL_DOMAINS[selectedDomain]}</span>
+                <span className="text-sm text-gray-500 whitespace-nowrap" aria-label="Domain">{EMAIL_DOMAINS[selectedDomain]}</span>
               </div>
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                 disabled={loading}
               >
                 Save
@@ -440,10 +446,13 @@ const EmailBox = () => {
           <>
             <div className="font-mono text-lg mb-2">{getDisplayEmail()}</div>
             <div className="inline-block relative w-64">
+              <label htmlFor="domain-select" className="sr-only">Select email domain</label>
               <select
+                id="domain-select"
                 value={selectedDomain}
                 onChange={(e) => handleDomainChange(e.target.value as keyof typeof EMAIL_DOMAINS)}
                 className="block w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer text-sm"
+                aria-label="Email domain"
               >
                 {Object.entries(EMAIL_DOMAINS).map(([key, domain]) => (
                   <option key={key} value={key}>
@@ -452,13 +461,13 @@ const EmailBox = () => {
                 ))}
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <ChevronDown className="h-4 w-4 text-gray-500" />
+                <ChevronDown className="h-4 w-4 text-gray-500" aria-hidden="true" />
               </div>
             </div>
           </>
         )}
         {error && (
-          <div className="mt-2 text-sm text-red-600">
+          <div className="mt-2 text-sm text-red-600" role="alert">
             {error}
           </div>
         )}
