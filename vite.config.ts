@@ -100,7 +100,12 @@ Disallow: /`;
 
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      babel: {
+        presets: ['@babel/preset-react'],
+        plugins: []
+      }
+    }),
     {
       name: 'generate-static-files',
       closeBundle() {
@@ -116,7 +121,13 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           icons: ['lucide-react'],
-          utils: ['./src/lib/guerrilla.ts', './src/lib/words.ts']
+          utils: ['./src/lib/guerrilla.ts', './src/lib/words.ts'],
+          // Separate route chunks
+          features: ['./src/pages/Features.tsx'],
+          about: ['./src/pages/About.tsx'],
+          privacy: ['./src/pages/Privacy.tsx'],
+          terms: ['./src/pages/Terms.tsx'],
+          faq: ['./src/pages/FAQ.tsx']
         }
       }
     },
@@ -126,10 +137,17 @@ export default defineConfig({
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1000,
     assetsInlineLimit: 4096,
-    sourcemap: false,
+    sourcemap: process.env.NODE_ENV === 'development',
     cssCodeSplit: true,
     modulePreload: {
       polyfill: true
+    },
+    // Enable build cache
+    cache: true,
+    // Optimize dependencies
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-router-dom', 'lucide-react'],
+      exclude: []
     }
   },
   server: {
@@ -142,7 +160,11 @@ export default defineConfig({
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
       'Content-Security-Policy': "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:;"
     },
-    compression: true
+    compression: true,
+    // Enable HMR with overlay disabled for better performance
+    hmr: {
+      overlay: false
+    }
   },
   preview: {
     headers: {
@@ -155,5 +177,13 @@ export default defineConfig({
       'Content-Security-Policy': "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:;"
     },
     compression: true
+  },
+  // Add performance optimizations
+  esbuild: {
+    legalComments: 'none',
+    treeShaking: true,
+    minifyIdentifiers: true,
+    minifySyntax: true,
+    minifyWhitespace: true
   }
 });
