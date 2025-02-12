@@ -46,7 +46,7 @@ export default function FAQ() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-16">
+    <main className="max-w-4xl mx-auto px-4 py-16" role="main">
       <h1 className="text-4xl font-bold text-center mb-8">Frequently Asked Questions</h1>
       
       <div className="space-y-6">
@@ -55,9 +55,9 @@ export default function FAQ() {
             key={index}
             className="group bg-white rounded-lg shadow-sm border border-gray-200 open:shadow-md transition-all duration-300"
           >
-            <summary className="flex items-center justify-between cursor-pointer p-6">
+            <summary className="flex items-center justify-between cursor-pointer p-6" role="button" aria-expanded="false">
               <h3 className="text-lg font-medium pr-4">{faq.question}</h3>
-              <ChevronDown className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" />
+              <ChevronDown className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
             <div className="px-6 pb-6 text-gray-600">
               {faq.answer}
@@ -71,10 +71,11 @@ export default function FAQ() {
         <a
           href="mailto:support@snapmails.xyz"
           className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+          aria-label="Contact Support via Email"
         >
           Contact Support
         </a>
       </div>
-    </div>
+    </main>
   );
 }

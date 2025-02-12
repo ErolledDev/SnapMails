@@ -46,23 +46,24 @@ export default function Features() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
+    <main className="max-w-7xl mx-auto px-4 py-16" role="main">
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
           Powerful Features
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Discover what makes TempMail Pro the most versatile temporary email service available.
+          Discover what makes SnapMails the most versatile temporary email service available.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" role="list">
         {features.map((feature, index) => (
           <div
             key={index}
             className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 hover:-translate-y-1 hover:bg-gradient-to-br hover:from-blue-50 hover:to-white"
+            role="listitem"
           >
-            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4" aria-hidden="true">
               {feature.icon}
             </div>
             <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
@@ -74,15 +75,16 @@ export default function Features() {
       <div className="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-center">
         <h2 className="text-2xl font-bold mb-4 text-white">Ready to get started?</h2>
         <p className="text-blue-100 mb-8">
-          Try TempMail Pro now and experience the best temporary email service available.
+          Try SnapMails now and experience the best temporary email service available.
         </p>
         <a
           href="/"
           className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors"
+          aria-label="Get started with SnapMails"
         >
           Get Started
         </a>
       </div>
-    </div>
+    </main>
   );
 }
