@@ -380,7 +380,7 @@ const EmailBox = () => {
             )}
             <button 
               onClick={handleRefresh} 
-              className="p-2 hover:bg-gray-100 rounded-full transition-transform duration-300 hover:rotate-180" 
+              className="p-2 hover:bg-gray-100 rounded-full transition-all duration-300 hover:rotate-180" 
               title="Refresh emails"
               aria-label="Refresh emails"
               disabled={loading}

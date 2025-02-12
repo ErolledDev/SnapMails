@@ -9,7 +9,7 @@ export default function FAQ() {
     },
     {
       question: "How long do temporary email addresses last?",
-      answer: "Temporary email addresses and their messages are automatically deleted after 24 hours. However, you can continue using the service by generating new addresses as needed."
+      answer: "Email addresses don't expire and remain accessible as long as you maintain your session. However, individual emails are automatically deleted after 1 hour for privacy and security reasons. You can always generate new addresses as needed."
     },
     {
       question: "Can I customize my email address?",
@@ -21,7 +21,7 @@ export default function FAQ() {
     },
     {
       question: "How secure is the service?",
-      answer: "We take security seriously. All communications are encrypted, and we don't store any personal information. Emails are automatically deleted after 24 hours, and we implement strict security measures to protect your privacy."
+      answer: "We take security seriously. All communications are encrypted, and we don't store any personal information. Emails are automatically deleted after 1 hour, and we implement strict security measures to protect your privacy."
     },
     {
       question: "Can I send emails with SnapMails?",
@@ -33,15 +33,15 @@ export default function FAQ() {
     },
     {
       question: "Will I lose my emails if I close the browser?",
-      answer: "Your emails are temporarily cached in your browser session. While you can access them when you return to the same email address, remember that all emails are automatically deleted after 24 hours."
+      answer: "Your emails are temporarily cached in your browser session. While you can access them when you return to the same email address, remember that all emails are automatically deleted after 1 hour."
     },
     {
       question: "Can I use this for business purposes?",
-      answer: "While SnapMails is great for testing and temporary use, we recommend using a permanent email service for important business communications as temporary emails are deleted after 24 hours."
+      answer: "While SnapMails is great for testing and temporary use, we recommend using a permanent email service for important business communications as emails are deleted after 1 hour."
     },
     {
       question: "What if I receive important emails?",
-      answer: "Since this is a temporary email service, we strongly recommend not using it for important communications. Any emails received will be deleted after 24 hours, so make sure to save any important information before then."
+      answer: "Since this is a temporary email service, we strongly recommend not using it for important communications. Any emails received will be deleted after 1 hour, so make sure to save any important information before then."
     }
   ];
 
