@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // Generate static HTML files for each route
 const generateStaticFiles = () => {
@@ -106,6 +107,12 @@ export default defineConfig({
         plugins: []
       }
     }),
+    visualizer({
+      filename: 'dist/stats.html',
+      gzipSize: true,
+      brotliSize: true,
+      open: false
+    }),
     {
       name: 'generate-static-files',
       closeBundle() {
@@ -137,7 +144,7 @@ export default defineConfig({
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1000,
     assetsInlineLimit: 4096,
-    sourcemap: process.env.NODE_ENV === 'development',
+    sourcemap: false, // Disable sourcemaps in production
     cssCodeSplit: true,
     modulePreload: {
       polyfill: true
@@ -184,6 +191,7 @@ export default defineConfig({
     treeShaking: true,
     minifyIdentifiers: true,
     minifySyntax: true,
-    minifyWhitespace: true
+    minifyWhitespace: true,
+    drop: ['console', 'debugger'] // Remove console.log and debugger statements in production
   }
 });
