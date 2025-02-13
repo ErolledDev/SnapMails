@@ -8,7 +8,11 @@ import About from './pages/About';
 import Features from './pages/Features';
 import NotFound from './pages/NotFound';
 import FAQ from './pages/FAQ';
-import Blog from './pages/Blog.tsx';
+import Blog from './pages/Blog';
+import WhyUseDisposableEmail from './pages/blog/why-use-disposable-email';
+import ProtectOnlineIdentity from './pages/blog/protect-online-identity';
+import CombatEmailSpam from './pages/blog/combat-email-spam';
+import FutureOfTemporaryEmails from './pages/blog/future-of-temporary-emails';
 import PWAPrompt from './components/PWAPrompt';
 
 // Error Boundary Component
@@ -271,6 +275,10 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/features" element={<Features />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/why-use-disposable-email" element={<WhyUseDisposableEmail />} />
+            <Route path="/blog/protect-online-identity" element={<ProtectOnlineIdentity />} />
+            <Route path="/blog/combat-email-spam" element={<CombatEmailSpam />} />
+            <Route path="/blog/future-of-temporary-emails" element={<FutureOfTemporaryEmails />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
