@@ -8,11 +8,6 @@ import About from './pages/About';
 import Features from './pages/Features';
 import NotFound from './pages/NotFound';
 import FAQ from './pages/FAQ';
-import Blog from './pages/Blog';
-import WhyUseDisposableEmail from './pages/blog/why-use-disposable-email';
-import ProtectOnlineIdentity from './pages/blog/protect-online-identity';
-import CombatEmailSpam from './pages/blog/combat-email-spam';
-import FutureOfTemporaryEmails from './pages/blog/future-of-temporary-emails';
 import PWAPrompt from './components/PWAPrompt';
 
 // Error Boundary Component
@@ -195,7 +190,6 @@ const App: React.FC = () => {
               <nav className="hidden md:flex items-center space-x-6">
                 <Link to="/" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">Home</Link>
                 <Link to="/features" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">Features</Link>
-                <Link to="/blog" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">Blog</Link>
                 <Link to="/about" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">About</Link>
                 <button
                   onClick={toggleTheme}
@@ -252,13 +246,6 @@ const App: React.FC = () => {
                   Features
                 </Link>
                 <Link 
-                  to="/blog" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Blog
-                </Link>
-                <Link 
                   to="/about" 
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
                   onClick={() => setIsMenuOpen(false)}
@@ -274,11 +261,6 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/features" element={<Features />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/why-use-disposable-email" element={<WhyUseDisposableEmail />} />
-            <Route path="/blog/protect-online-identity" element={<ProtectOnlineIdentity />} />
-            <Route path="/blog/combat-email-spam" element={<CombatEmailSpam />} />
-            <Route path="/blog/future-of-temporary-emails" element={<FutureOfTemporaryEmails />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
@@ -308,7 +290,6 @@ const App: React.FC = () => {
                 <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">Product</h3>
                 <ul className="space-y-3 text-sm">
                   <li><Link to="/features" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Features</Link></li>
-                  <li><Link to="/blog" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Blog</Link></li>
                   <li><Link to="/about" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">About</Link></li>
                   <li><Link to="/faq" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">FAQ</Link></li>
                 </ul>
