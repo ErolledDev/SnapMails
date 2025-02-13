@@ -375,7 +375,7 @@ const EmailBox = () => {
             {!canCustomize && (
               <div className="flex items-center text-sm text-amber-600 font-medium">
                 <AlertCircle className="w-4 h-4 mr-1" aria-hidden="true" />
-                Customization locked
+                Customization locked or  Refresh the page
               </div>
             )}
             <button 
@@ -474,7 +474,7 @@ const EmailBox = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 h-[600px]">
-        <div className="border-r overflow-y-auto">
+        <div className="border-r border overflow-y-auto">
           {emails.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
               <Mail className="w-12 h-12 mb-2" />
@@ -503,7 +503,7 @@ const EmailBox = () => {
           )}
         </div>
 
-        <div className="overflow-y-auto">
+        <div className="overflow-y-auto border">
           <Suspense fallback={
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>

@@ -300,6 +300,7 @@ const App: React.FC = () => {
                 <ul className="space-y-3 text-sm">
                   <li><Link to="/privacy" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Privacy Policy</Link></li>
                   <li><Link to="/terms" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Terms of Service</Link></li>
+                  <li><a href="https://www.guerrillamail.com/GuerrillaMailAPI.html" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Api</a></li>
                 </ul>
               </div>
               <div>
