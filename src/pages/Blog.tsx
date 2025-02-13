@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 interface BlogPost {
   id: string;
@@ -10,6 +11,7 @@ interface BlogPost {
   readTime: string;
   slug: string;
   category: string;
+  image: string;
 }
 
 const blogPosts: BlogPost[] = [
@@ -20,7 +22,8 @@ const blogPosts: BlogPost[] = [
     date: 'March 15, 2025',
     readTime: '5 min read',
     slug: 'why-use-disposable-email',
-    category: 'Privacy'
+    category: 'Privacy',
+    image: 'https://images.unsplash.com/photo-1483706600674-e0c87d3fe85b?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: '2',
@@ -29,7 +32,8 @@ const blogPosts: BlogPost[] = [
     date: 'March 10, 2025',
     readTime: '8 min read',
     slug: 'protect-online-identity',
-    category: 'Security'
+    category: 'Security',
+    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: '3',
@@ -38,13 +42,24 @@ const blogPosts: BlogPost[] = [
     date: 'March 5, 2025',
     readTime: '6 min read',
     slug: 'combat-email-spam',
-    category: 'Email Security'
+    category: 'Email Security',
+    image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=800&q=80'
   }
 ];
 
 const Blog: React.FC = () => {
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <Helmet>
+        <title>Blog - Privacy & Security Tips | SnapMails</title>
+        <meta name="description" content="Stay informed about email privacy, cybersecurity, and best practices for protecting your digital identity with SnapMails' expert blog articles." />
+        <meta name="keywords" content="email privacy, cybersecurity, digital security, online privacy, temporary email, disposable email" />
+        <meta property="og:title" content="Blog - Privacy & Security Tips | SnapMails" />
+        <meta property="og:description" content="Stay informed about email privacy, cybersecurity, and best practices for protecting your digital identity." />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://snapmails.xyz/blog" />
+      </Helmet>
+
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
           Privacy & Security Blog
@@ -60,6 +75,13 @@ const Blog: React.FC = () => {
             key={post.id}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700"
           >
+            <Link to={`/blog/${post.slug}`}>
+              <img
+                src={post.image}
+                alt={post.title}
+                className="w-full h-48 object-cover"
+              />
+            </Link>
             <div className="p-6">
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
                 <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-xs font-medium">
