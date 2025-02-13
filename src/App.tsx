@@ -8,7 +8,55 @@ import About from './pages/About';
 import Features from './pages/Features';
 import NotFound from './pages/NotFound';
 import FAQ from './pages/FAQ';
+import Blog from './pages/Blog.tsx';
 import PWAPrompt from './components/PWAPrompt';
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Something went wrong</h2>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Loading Spinner Component
+const LoadingSpinner: React.FC = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
+);
 
 const Home: React.FC = () => {
   return (
@@ -86,54 +134,6 @@ const Home: React.FC = () => {
   );
 };
 
-// Error Boundary Component
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Something went wrong</h2>
-            <button
-              onClick={() => {
-                // Clear potentially corrupted state
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.reload();
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-// Loading Spinner Component
-const LoadingSpinner: React.FC = () => (
-  <div className="flex items-center justify-center min-h-[400px]">
-    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-  </div>
-);
-
 const App: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
@@ -191,6 +191,7 @@ const App: React.FC = () => {
               <nav className="hidden md:flex items-center space-x-6">
                 <Link to="/" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">Home</Link>
                 <Link to="/features" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">Features</Link>
+                <Link to="/blog" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">Blog</Link>
                 <Link to="/about" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">About</Link>
                 <button
                   onClick={toggleTheme}
@@ -247,6 +248,13 @@ const App: React.FC = () => {
                   Features
                 </Link>
                 <Link 
+                  to="/blog" 
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Blog
+                </Link>
+                <Link 
                   to="/about" 
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
                   onClick={() => setIsMenuOpen(false)}
@@ -262,6 +270,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/features" element={<Features />} />
+            <Route path="/blog" element={<Blog />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
@@ -291,6 +300,7 @@ const App: React.FC = () => {
                 <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">Product</h3>
                 <ul className="space-y-3 text-sm">
                   <li><Link to="/features" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Features</Link></li>
+                  <li><Link to="/blog" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Blog</Link></li>
                   <li><Link to="/about" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">About</Link></li>
                   <li><Link to="/faq" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">FAQ</Link></li>
                 </ul>
@@ -300,7 +310,7 @@ const App: React.FC = () => {
                 <ul className="space-y-3 text-sm">
                   <li><Link to="/privacy" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Privacy Policy</Link></li>
                   <li><Link to="/terms" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Terms of Service</Link></li>
-                  <li><a href="https://www.guerrillamail.com/GuerrillaMailAPI.html" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">Api</a></li>
+                  <li><a href="https://www.guerrillamail.com/GuerrillaMailAPI.html" className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">API Documentation</a></li>
                 </ul>
               </div>
               <div>
