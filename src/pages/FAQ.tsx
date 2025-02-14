@@ -49,10 +49,10 @@ export default function FAQ() {
   return (
     <>
       <Helmet>
-        <title>FAQ -   Common Questions Answered - Temp Mail - Free Disposable Temporary Email | Spam-Free Temp Mail </title>
-        <meta name="description" content="Find answers to frequently asked questions about SnapMails' free temporary email service. Learn how to use our disposable email addresses, features, and privacy protection." />
-        <meta property="og:title" content="FAQ - SnapMails Temporary Email Service | Common Questions Answered" />
-        <meta property="og:description" content="Find answers to frequently asked questions about SnapMails' free temporary email service. Learn how to use our disposable email addresses, features, and privacy protection." />
+        <title>FAQ - Temp Mail - Free Disposable Temporary Email | Spam-Free Temp Mail</title>
+        <meta name="description" content="Disposable email addresses instantly. Protect your privacy with SnapMails' free temporary email service. No registration, instant inbox access, and automatic deletion for maximum security. Perfect for avoiding spam, testing services, and protecting your real email." />
+        <meta property="og:title" content="FAQ - Temp Mail - Free Disposable Temporary Email | Spam-Free Temp Mail" />
+        <meta property="og:description" content="Disposable email addresses instantly. Protect your privacy with SnapMails' free temporary email service. No registration, instant inbox access, and automatic deletion for maximum security. Perfect for avoiding spam, testing services, and protecting your real email." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://snapmails.xyz/faq" />
         <link rel="canonical" href="https://snapmails.xyz/faq" />
