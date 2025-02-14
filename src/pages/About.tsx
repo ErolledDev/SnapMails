@@ -6,7 +6,7 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About SnapMails - Free Temporary Email Service | Our Mission & Features</title>
+        <title>About SnapMails - Temp Mail - Free Disposable Temporary Email | Spam-Free Temp Mail</title>
         <meta name="description" content="Learn about SnapMails, your trusted provider of free disposable email addresses. Discover our mission, features, and commitment to protecting your online privacy." />
         <meta property="og:title" content="About SnapMails - Free Temporary Email Service | Our Mission & Features" />
         <meta property="og:description" content="Learn about SnapMails, your trusted provider of free disposable email addresses. Discover our mission, features, and commitment to protecting your online privacy." />
