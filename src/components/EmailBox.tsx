@@ -18,6 +18,8 @@ const EMAIL_STORAGE_KEY = 'tempmail_email';
 const EMAILS_STORAGE_KEY = 'tempmail_emails';
 const DOMAIN_STORAGE_KEY = 'tempmail_domain';
 const SESSION_STORAGE_KEY = 'tempmail_session';
+const COOLDOWN_STORAGE_KEY = 'tempmail_cooldown';
+const COOLDOWN_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 const EMAIL_DOMAINS = {
   sharklasers: '@sharklasers.com',
@@ -76,6 +78,7 @@ const EmailBox = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCopied, setShowCopied] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<keyof typeof EMAIL_DOMAINS>('sharklasers');
+  const [cooldownTime, setCooldownTime] = useState<number>(0);
   const refreshTimerRef = useRef<number>();
   const lastCheckRef = useRef<number>(0);
   const isInitialCheck = useRef(true);
@@ -157,7 +160,18 @@ const EmailBox = () => {
     checkEmails(true);
   }, [checkEmails]);
 
+  const startCooldown = useCallback(() => {
+    const now = Date.now();
+    setCooldownTime(now + COOLDOWN_DURATION);
+    localStorage.setItem(COOLDOWN_STORAGE_KEY, now.toString());
+  }, []);
+
   const handleForgetEmail = useCallback(async () => {
+    if (cooldownTime > Date.now()) {
+      setError('Please wait before generating a new email address');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -177,13 +191,14 @@ const EmailBox = () => {
       
       localStorage.setItem(EMAIL_STORAGE_KEY, response.email_addr);
       
+      startCooldown();
     } catch (error) {
       console.error('Failed to get new email:', error);
       setError('Failed to get new email address. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [client]);
+  }, [client, cooldownTime, startCooldown]);
 
   const renderEmailContent = useCallback((content: string) => {
     try {
@@ -231,6 +246,18 @@ const EmailBox = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Check for existing cooldown
+    const savedCooldown = localStorage.getItem(COOLDOWN_STORAGE_KEY);
+    if (savedCooldown) {
+      const cooldownStart = parseInt(savedCooldown, 10);
+      const remainingTime = cooldownStart + COOLDOWN_DURATION - Date.now();
+      if (remainingTime > 0) {
+        setCooldownTime(cooldownStart + COOLDOWN_DURATION);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -378,9 +405,12 @@ const EmailBox = () => {
             </button>
             <button
               onClick={handleForgetEmail}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Get new email address"
-              aria-label="Get new email address"
+              className={`p-2 hover:bg-gray-100 rounded-full transition-colors ${
+                cooldownTime > Date.now() ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              title={cooldownTime > Date.now() ? "New email generation is on cooldown" : "Get new email address"}
+              aria-label={cooldownTime > Date.now() ? "New email generation is on cooldown" : "Get new email address"}
+              disabled={cooldownTime > Date.now()}
             >
               <Trash2 className="w-4 h-4 text-red-500" aria-hidden="true" />
             </button>
