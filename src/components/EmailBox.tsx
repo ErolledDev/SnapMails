@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { Mail, RefreshCw, Copy, Edit2, AlertCircle, ChevronDown } from 'lucide-react';
+import { Mail, RefreshCw, Copy, Edit2, Trash2, ChevronDown } from 'lucide-react';
 import { GuerrillaClient } from '../lib/guerrilla';
 
 interface Email {
@@ -17,11 +17,7 @@ const REFRESH_INTERVAL = 15000;
 const EMAIL_STORAGE_KEY = 'tempmail_email';
 const EMAILS_STORAGE_KEY = 'tempmail_emails';
 const DOMAIN_STORAGE_KEY = 'tempmail_domain';
-const EMAIL_TIMESTAMP_KEY = 'tempmail_timestamp';
-const LAST_EMAIL_CHANGE_KEY = 'tempmail_last_change';
 const SESSION_STORAGE_KEY = 'tempmail_session';
-const ONE_HOUR = 3600000;
-const RATE_LIMIT_COOLDOWN = ONE_HOUR;
 
 const EMAIL_DOMAINS = {
   sharklasers: '@sharklasers.com',
@@ -37,50 +33,6 @@ const EMAIL_DOMAINS = {
   spam: '@spam.me'
 } as const;
 
-const EditButton: React.FC<{ onClick: () => void; disabled: boolean }> = ({ onClick, disabled }) => {
-  const [remainingMinutes, setRemainingMinutes] = useState<number>(0);
-
-  useEffect(() => {
-    if (disabled) {
-      const lastChange = localStorage.getItem(LAST_EMAIL_CHANGE_KEY);
-      if (lastChange) {
-        const updateRemainingTime = () => {
-          const now = Date.now();
-          const timeSinceLastChange = now - Number(lastChange);
-          const remainingMs = Math.max(0, RATE_LIMIT_COOLDOWN - timeSinceLastChange);
-          setRemainingMinutes(Math.ceil(remainingMs / 60000));
-        };
-
-        updateRemainingTime();
-        const interval = setInterval(updateRemainingTime, 1000);
-        return () => clearInterval(interval);
-      }
-    }
-  }, [disabled]);
-
-  return (
-    <button 
-      onClick={onClick} 
-      className={`group relative p-2 hover:bg-gray-100 rounded-full transition-colors ${
-        disabled ? 'cursor-not-allowed' : ''
-      }`}
-      title={disabled ? `Wait ${remainingMinutes} minutes to customize` : 'Change Email'}
-      disabled={disabled}
-      aria-label={disabled ? `Wait ${remainingMinutes} minutes to customize email` : 'Change email address'}
-    >
-      <Edit2 className={`w-4 h-4 ${disabled ? 'text-gray-400' : ''}`} aria-hidden="true" />
-      {disabled && remainingMinutes > 0 && (
-        <div className="hidden group-hover:block absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap z-50">
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
-            <div className="border-4 border-transparent border-t-gray-800"></div>
-          </div>
-          Wait {remainingMinutes} minute{remainingMinutes !== 1 ? 's' : ''} to customize
-        </div>
-      )}
-    </button>
-  );
-};
-
 const EmailBox = () => {
   const [client] = useState(() => new GuerrillaClient());
   const [emailAddress, setEmailAddress] = useState('');
@@ -92,8 +44,6 @@ const EmailBox = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCopied, setShowCopied] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<keyof typeof EMAIL_DOMAINS>('sharklasers');
-  const [emailTimestamp, setEmailTimestamp] = useState<number>(0);
-  const [canCustomize, setCanCustomize] = useState(true);
   const refreshTimerRef = useRef<number>();
   const lastCheckRef = useRef<number>(0);
 
@@ -162,6 +112,24 @@ const EmailBox = () => {
     checkEmails(true);
   }, [checkEmails]);
 
+  const handleForgetEmail = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await client.forgetMe(emailAddress);
+      const response = await client.getEmailAddress();
+      setEmailAddress(response.email_addr);
+      setNewEmailUser(response.email_addr.split('@')[0]);
+      setEmails([]);
+      checkEmails(false);
+    } catch (error) {
+      console.error('Failed to get new email:', error);
+      setError('Failed to get new email address. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [client, emailAddress, checkEmails]);
+
   const renderEmailContent = useCallback((content: string) => {
     try {
       return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />;
@@ -171,38 +139,15 @@ const EmailBox = () => {
     }
   }, []);
 
-  const canChangeEmail = () => {
-    const lastChange = localStorage.getItem(LAST_EMAIL_CHANGE_KEY);
-    if (!lastChange) return true;
-    
-    const now = Date.now();
-    const timeSinceLastChange = now - Number(lastChange);
-    return timeSinceLastChange >= RATE_LIMIT_COOLDOWN;
-  };
-
   const handleEmailChange = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!canCustomize) {
-      setError('Please wait 60 minutes before customizing your email again.');
-      return;
-    }
-
-    if (!canChangeEmail()) {
-      const lastChange = Number(localStorage.getItem(LAST_EMAIL_CHANGE_KEY));
-      const waitMinutes = Math.ceil((RATE_LIMIT_COOLDOWN - (Date.now() - lastChange)) / 60000);
-      setError(`Please wait ${waitMinutes} minutes before changing email again to avoid rate limiting.`);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
       const response = await client.setEmailUser(newEmailUser);
       setEmailAddress(response.email_addr);
       setIsEditing(false);
-      setEmailTimestamp(Date.now());
-      localStorage.setItem(LAST_EMAIL_CHANGE_KEY, String(Date.now()));
       checkEmails(false);
     } catch (error) {
       console.error('Failed to change email:', error);
@@ -244,15 +189,6 @@ const EmailBox = () => {
     const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
     const savedEmails = localStorage.getItem(EMAILS_STORAGE_KEY);
     const savedDomain = localStorage.getItem(DOMAIN_STORAGE_KEY) as keyof typeof EMAIL_DOMAINS;
-    const savedSession = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    
-    const sessionTimestamp = savedSession ? JSON.parse(savedSession).timestamp : null;
-    const cookieTimestamp = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('email_timestamp='))
-      ?.split('=')[1];
-    
-    const savedTimestamp = sessionTimestamp || cookieTimestamp || localStorage.getItem(EMAIL_TIMESTAMP_KEY);
     
     if (savedEmail) {
       setEmailAddress(savedEmail);
@@ -270,42 +206,23 @@ const EmailBox = () => {
     if (savedDomain && EMAIL_DOMAINS[savedDomain]) {
       setSelectedDomain(savedDomain);
     }
-
-    if (savedTimestamp) {
-      const timestamp = Number(savedTimestamp);
-      const now = Date.now();
-      const elapsed = (now - timestamp) / 1000;
-      
-      if (elapsed < 3600) {
-        setEmailTimestamp(timestamp);
-        setCanCustomize(true);
-      } else {
-        setCanCustomize(false);
-        setError('Please wait 60 minutes before customizing your email again.');
-      }
-    }
   }, []);
 
   useEffect(() => {
-    if (emailAddress && emailTimestamp) {
+    if (emailAddress) {
       localStorage.setItem(EMAIL_STORAGE_KEY, emailAddress);
-      localStorage.setItem(EMAIL_TIMESTAMP_KEY, String(emailTimestamp));
       localStorage.setItem(DOMAIN_STORAGE_KEY, selectedDomain);
       
       sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
         email: emailAddress,
-        timestamp: emailTimestamp,
         domain: selectedDomain
       }));
-      
-      const expires = new Date(emailTimestamp + ONE_HOUR);
-      document.cookie = `email_timestamp=${emailTimestamp}; path=/; expires=${expires.toUTCString()}; SameSite=Strict`;
     }
     
     if (emails.length > 0) {
       localStorage.setItem(EMAILS_STORAGE_KEY, JSON.stringify(emails));
     }
-  }, [emailAddress, emails, selectedDomain, emailTimestamp]);
+  }, [emailAddress, emails, selectedDomain]);
 
   useEffect(() => {
     const startAutoRefresh = () => {
@@ -338,12 +255,10 @@ const EmailBox = () => {
           const response = await client.setEmailUser(emailUser);
           setEmailAddress(response.email_addr);
           setNewEmailUser(emailUser);
-          setEmailTimestamp(Date.now());
         } else {
           const response = await client.getEmailAddress();
           setEmailAddress(response.email_addr);
           setNewEmailUser(response.email_addr.split('@')[0]);
-          setEmailTimestamp(Date.now());
         }
         
         await checkEmails(false);
@@ -372,12 +287,6 @@ const EmailBox = () => {
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm font-medium text-gray-600">Your temporary email address:</div>
           <div className="flex gap-2 items-center">
-            {!canCustomize && (
-              <div className="flex items-center text-sm text-amber-600 font-medium">
-                <AlertCircle className="w-4 h-4 mr-1" aria-hidden="true" />
-                Customization locked or  Refresh the page
-              </div>
-            )}
             <button 
               onClick={handleRefresh} 
               className="p-2 hover:bg-gray-100 rounded-full transition-all duration-300 hover:rotate-180" 
@@ -402,10 +311,22 @@ const EmailBox = () => {
                 </div>
               )}
             </div>
-            <EditButton 
+            <button
               onClick={() => setIsEditing(true)}
-              disabled={!canCustomize || !canChangeEmail()}
-            />
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Change email address"
+              aria-label="Change email address"
+            >
+              <Edit2 className="w-4 h-4" aria-hidden="true" />
+            </button>
+            <button
+              onClick={handleForgetEmail}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Get new email address"
+              aria-label="Get new email address"
+            >
+              <Trash2 className="w-4 h-4 text-red-500" aria-hidden="true" />
+            </button>
           </div>
         </div>
         {isEditing ? (

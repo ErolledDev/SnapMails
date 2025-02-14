@@ -135,8 +135,6 @@ export class GuerrillaClient {
   async setEmailUser(emailUser: string, lang = 'en'): Promise<EmailAddress> {
     try {
       const response = await this.request<EmailAddress>('set_email_user', { email_user: emailUser, lang });
-      // Store the email timestamp in a cookie
-      document.cookie = `email_timestamp=${Date.now()}; path=/; max-age=3600; SameSite=Strict`;
       this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
@@ -192,14 +190,20 @@ export class GuerrillaClient {
     }
   }
 
-  async forgetMe(emailAddr: string): Promise<boolean> {
+  async forgetMe(emailAddr: string): Promise<EmailAddress> {
     try {
-      const response = await this.request<boolean>('forget_me', { email_addr });
+      // First, forget the current email
+      await this.request<boolean>('forget_me', { email_addr });
+      
+      // Then, get a new email address
+      const emailUser = generateEmailUser();
+      const response = await this.setEmailUser(emailUser);
+      
       this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
       console.error('Failed to forget email:', error);
-      throw new Error('Failed to forget email address. Please try again.');
+      throw new Error('Failed to get new email address. Please try again.');
     }
   }
 
