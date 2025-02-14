@@ -33,6 +33,38 @@ const EMAIL_DOMAINS = {
   spam: '@spam.me'
 } as const;
 
+// Strict filter patterns for unwanted emails
+const FILTERED_PATTERNS = {
+  from: ['no-reply@guerrillamail.com'],
+  subject: ['Welcome to Guerrilla Mail'],
+  content: ['Thank you for using Guerrilla Mail']
+};
+
+const isFilteredEmail = (email: Email): boolean => {
+  // Check sender
+  if (FILTERED_PATTERNS.from.some(sender => 
+    email.mail_from.toLowerCase().includes(sender.toLowerCase())
+  )) {
+    return true;
+  }
+
+  // Check subject
+  if (FILTERED_PATTERNS.subject.some(subject => 
+    email.mail_subject.toLowerCase().includes(subject.toLowerCase())
+  )) {
+    return true;
+  }
+
+  // Check content excerpt
+  if (FILTERED_PATTERNS.content.some(content => 
+    email.mail_excerpt.toLowerCase().includes(content.toLowerCase())
+  )) {
+    return true;
+  }
+
+  return false;
+};
+
 const EmailBox = () => {
   const [client] = useState(() => new GuerrillaClient());
   const [emailAddress, setEmailAddress] = useState('');
@@ -46,6 +78,7 @@ const EmailBox = () => {
   const [selectedDomain, setSelectedDomain] = useState<keyof typeof EMAIL_DOMAINS>('sharklasers');
   const refreshTimerRef = useRef<number>();
   const lastCheckRef = useRef<number>(0);
+  const isInitialCheck = useRef(true);
 
   const getDisplayEmail = useCallback(() => {
     const username = emailAddress.split('@')[0];
@@ -55,7 +88,6 @@ const EmailBox = () => {
   const checkEmails = useCallback(async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
-      setError(null);
       
       const now = Date.now();
       if (now - lastCheckRef.current < 5000) {
@@ -64,18 +96,31 @@ const EmailBox = () => {
       lastCheckRef.current = now;
 
       const response = await client.checkEmail();
+      
       setEmails(prevEmails => {
         const emailMap = new Map(prevEmails.map(email => [email.mail_id, email]));
-        response.list.forEach(email => emailMap.set(email.mail_id, email));
-        return Array.from(emailMap.values()).sort((a, b) => 
-          Number(b.mail_timestamp) - Number(a.mail_timestamp)
-        );
+        
+        // Filter out unwanted emails before adding to map
+        response.list
+          .filter(email => !isFilteredEmail(email))
+          .forEach(email => emailMap.set(email.mail_id, email));
+        
+        // Convert map back to array and sort by timestamp
+        return Array.from(emailMap.values())
+          .sort((a, b) => Number(b.mail_timestamp) - Number(a.mail_timestamp));
       });
+
+      // Clear any existing errors on successful check
+      setError(null);
     } catch (error) {
       console.error('Failed to check emails:', error);
-      setError('Failed to check emails. Please try again.');
+      // Only show error if it's not the initial check
+      if (!isInitialCheck.current) {
+        setError('Failed to check emails. Please try again.');
+      }
     } finally {
       if (showLoading) setLoading(false);
+      isInitialCheck.current = false;
     }
   }, [client]);
 
@@ -117,23 +162,19 @@ const EmailBox = () => {
       setLoading(true);
       setError(null);
       
-      // Clear local storage and session storage for email-related data
       localStorage.removeItem(EMAIL_STORAGE_KEY);
       localStorage.removeItem(EMAILS_STORAGE_KEY);
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
       
-      // Clear state
       setEmails([]);
       setSelectedEmail(null);
       
-      // Generate new email
       const emailUser = client.generateEmailUser();
       const response = await client.setEmailUser(emailUser);
       
       setEmailAddress(response.email_addr);
       setNewEmailUser(response.email_addr.split('@')[0]);
       
-      // Store new email
       localStorage.setItem(EMAIL_STORAGE_KEY, response.email_addr);
       
     } catch (error) {
@@ -211,7 +252,9 @@ const EmailBox = () => {
     
     if (savedEmails) {
       try {
-        setEmails(JSON.parse(savedEmails));
+        const parsedEmails = JSON.parse(savedEmails);
+        // Filter out welcome emails from saved emails
+        setEmails(parsedEmails.filter((email: Email) => !isFilteredEmail(email)));
       } catch (e) {
         console.error('Failed to parse saved emails:', e);
       }
@@ -289,7 +332,7 @@ const EmailBox = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]" role="status" aria-label="Loading emails">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -417,7 +460,7 @@ const EmailBox = () => {
               <p className="text-sm text-gray-400 mt-2">Checking for new emails automatically...</p>
             </div>
           ) : (
-            <div className="divide-y">
+            <div className="divide-y" role="list">
               {emails.map((email) => (
                 <button
                   key={email.mail_id}
@@ -425,6 +468,7 @@ const EmailBox = () => {
                   className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
                     selectedEmail?.mail_id === email.mail_id ? 'bg-blue-50' : ''
                   }`}
+                  role="listitem"
                 >
                   <div className="flex justify-between items-start mb-1">
                     <div className="font-medium truncate flex-1">{email.mail_from}</div>
@@ -440,7 +484,7 @@ const EmailBox = () => {
 
         <div className="overflow-y-auto border">
           <Suspense fallback={
-            <div className="flex items-center justify-center min-h-[400px]">
+            <div className="flex items-center justify-center min-h-[400px]" role="status" aria-label="Loading email content">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           }>
