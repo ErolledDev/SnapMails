@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { VitePWA } from 'vite-plugin-pwa';
+import compression from 'vite-plugin-compression';
 
 // Generate static HTML files for each route
 const generateStaticFiles = () => {
@@ -101,11 +103,66 @@ Disallow: /`;
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        presets: ['@babel/preset-react'],
-        plugins: []
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'SnapMails',
+        short_name: 'SnapMails',
+        description: 'Secure & Customizable Disposable Email Service',
+        theme_color: '#3B82F6',
+        background_color: '#ffffff',
+        icons: [
+          {
+            src: '/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.guerrillamail\.com/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 // 1 hour
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/images\.unsplash\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 24 * 60 * 60 // 24 hours
+              }
+            }
+          }
+        ]
       }
+    }),
+    compression({
+      algorithm: 'brotli',
+      ext: '.br'
+    }),
+    compression({
+      algorithm: 'gzip',
+      ext: '.gz'
     }),
     visualizer({
       filename: 'dist/stats.html',
@@ -129,13 +186,15 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           icons: ['lucide-react'],
           utils: ['./src/lib/guerrilla.ts', './src/lib/words.ts'],
-          // Separate route chunks
           features: ['./src/pages/Features.tsx'],
           about: ['./src/pages/About.tsx'],
           privacy: ['./src/pages/Privacy.tsx'],
           terms: ['./src/pages/Terms.tsx'],
           faq: ['./src/pages/FAQ.tsx']
-        }
+        },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]'
       }
     },
     target: 'esnext',
@@ -144,14 +203,12 @@ export default defineConfig({
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1000,
     assetsInlineLimit: 4096,
-    sourcemap: false, // Disable sourcemaps in production
+    sourcemap: false,
     cssCodeSplit: true,
     modulePreload: {
       polyfill: true
     },
-    // Enable build cache
     cache: true,
-    // Optimize dependencies
     optimizeDeps: {
       include: ['react', 'react-dom', 'react-router-dom', 'lucide-react'],
       exclude: []
@@ -168,7 +225,6 @@ export default defineConfig({
       'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; script-src-elem 'self' 'unsafe-inline' blob: https:; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self';"
     },
     compression: true,
-    // Enable HMR with overlay disabled for better performance
     hmr: {
       overlay: false
     }
@@ -185,13 +241,12 @@ export default defineConfig({
     },
     compression: true
   },
-  // Add performance optimizations
   esbuild: {
     legalComments: 'none',
     treeShaking: true,
     minifyIdentifiers: true,
     minifySyntax: true,
     minifyWhitespace: true,
-    drop: ['console', 'debugger'] // Remove console.log and debugger statements in production
+    drop: ['console', 'debugger']
   }
 });

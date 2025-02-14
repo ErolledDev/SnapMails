@@ -4,6 +4,9 @@ import { generateEmailUser } from './words';
 
 const API_BASE = 'https://api.guerrillamail.com/ajax.php';
 const SESSION_STORAGE_KEY = 'tempmail_session';
+const RETRY_DELAY = 1000; // Base delay in milliseconds
+const MAX_RETRIES = 3;
+const REQUEST_TIMEOUT = 30000; // 30 seconds
 
 interface EmailAddress {
   email_addr: string;
@@ -41,91 +44,116 @@ interface EmailContent extends Email {
 export class GuerrillaClient {
   private sidToken: string | null = null;
   private retryCount = 0;
-  private maxRetries = 3;
-  private retryDelay = 1000; // Base delay in milliseconds
+  private lastRequestTime = 0;
+  private requestQueue: Promise<any> = Promise.resolve();
 
   constructor() {
-    // Try to restore session from session storage first, then cookie
-    const savedSession = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (savedSession) {
-      try {
+    this.initializeSession();
+  }
+
+  private initializeSession() {
+    try {
+      const savedSession = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      if (savedSession) {
         const { sidToken } = JSON.parse(savedSession);
         if (sidToken) {
           this.sidToken = sidToken;
+          return;
         }
-      } catch (e) {
-        console.warn('Failed to parse saved session:', e);
       }
-    } else {
-      const sidToken = document.cookie.split('; ').find(row => row.startsWith('PHPSESSID='))?.split('=')[1];
+
+      const sidToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('PHPSESSID='))
+        ?.split('=')[1];
+
       if (sidToken) {
         this.sidToken = sidToken;
       }
+    } catch (error) {
+      console.warn('Failed to initialize session:', error);
     }
   }
 
   private async request<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
-    try {
-      // Add abort controller for timeout
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-      const searchParams = new URLSearchParams({
-        f: endpoint,
-        ...params,
-        ip: '127.0.0.1',
-        agent: navigator.userAgent.substring(0, 160),
-        ...(this.sidToken ? { sid_token: this.sidToken } : {})
-      });
-
-      const response = await fetch(`${API_BASE}?${searchParams}`, {
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeout);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      
-      if (data.sid_token) {
-        this.sidToken = data.sid_token;
-        // Save to session storage
-        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ sidToken: data.sid_token }));
-        // Set session cookie with proper expiration
-        const expires = new Date(Date.now() + 3600000); // 1 hour
-        document.cookie = `PHPSESSID=${data.sid_token}; path=/; expires=${expires.toUTCString()}; SameSite=Strict`;
-      }
-
-      this.retryCount = 0; // Reset retry count on success
-      return data;
-    } catch (error) {
-      if (this.retryCount < this.maxRetries) {
-        this.retryCount++;
-        // Exponential backoff with jitter
-        const delay = Math.min(
-          this.retryDelay * Math.pow(2, this.retryCount - 1) + Math.random() * 1000,
-          30000 // Max delay of 30 seconds
-        );
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return this.request<T>(endpoint, params);
-      }
-      throw error;
+    // Rate limiting
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    if (timeSinceLastRequest < 1000) {
+      await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest));
     }
+
+    return new Promise((resolve, reject) => {
+      this.requestQueue = this.requestQueue
+        .then(async () => {
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+            const searchParams = new URLSearchParams({
+              f: endpoint,
+              ...params,
+              ip: '127.0.0.1',
+              agent: navigator.userAgent.substring(0, 160),
+              ...(this.sidToken ? { sid_token: this.sidToken } : {})
+            });
+
+            const response = await fetch(`${API_BASE}?${searchParams}`, {
+              signal: controller.signal,
+              headers: {
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+              }
+            });
+
+            clearTimeout(timeout);
+            this.lastRequestTime = Date.now();
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.error) {
+              throw new Error(data.error);
+            }
+
+            if (data.sid_token) {
+              this.updateSession(data.sid_token);
+            }
+
+            this.retryCount = 0;
+            resolve(data);
+          } catch (error) {
+            if (this.retryCount < MAX_RETRIES) {
+              this.retryCount++;
+              const delay = Math.min(
+                RETRY_DELAY * Math.pow(2, this.retryCount - 1) + Math.random() * 1000,
+                REQUEST_TIMEOUT
+              );
+              await new Promise(resolve => setTimeout(resolve, delay));
+              this.request<T>(endpoint, params).then(resolve).catch(reject);
+            } else {
+              reject(error);
+            }
+          }
+        })
+        .catch(reject);
+    });
+  }
+
+  private updateSession(sidToken: string) {
+    this.sidToken = sidToken;
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ sidToken }));
+    const expires = new Date(Date.now() + 3600000);
+    document.cookie = `PHPSESSID=${sidToken}; path=/; expires=${expires.toUTCString()}; SameSite=Strict`;
   }
 
   async getEmailAddress(lang = 'en'): Promise<EmailAddress> {
     try {
       const emailUser = generateEmailUser();
-      const response = await this.setEmailUser(emailUser, lang);
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.setEmailUser(emailUser, lang);
     } catch (error) {
       console.error('Failed to get email address:', error);
       throw new Error('Failed to generate email address. Please try again.');
@@ -134,9 +162,7 @@ export class GuerrillaClient {
 
   async setEmailUser(emailUser: string, lang = 'en'): Promise<EmailAddress> {
     try {
-      const response = await this.request<EmailAddress>('set_email_user', { email_user: emailUser, lang });
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.request<EmailAddress>('set_email_user', { email_user: emailUser, lang });
     } catch (error) {
       console.error('Failed to set email user:', error);
       throw new Error('Failed to set email address. Please try again.');
@@ -146,14 +172,9 @@ export class GuerrillaClient {
   async checkEmail(seq = '0'): Promise<EmailList> {
     try {
       const response = await this.request<EmailList>('check_email', { seq });
-      // Filter out welcome message
       if (response.list) {
-        response.list = response.list.filter(email => 
-          !(email.mail_from === 'no-reply@guerrillamail.com' && 
-            email.mail_subject.includes('Welcome to Guerrilla Mail'))
-        );
+        response.list = this.filterWelcomeEmails(response.list);
       }
-      this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
       console.error('Failed to check email:', error);
@@ -164,14 +185,9 @@ export class GuerrillaClient {
   async getEmailList(offset = '0', seq = '0'): Promise<EmailList> {
     try {
       const response = await this.request<EmailList>('get_email_list', { offset, seq });
-      // Filter out welcome message
       if (response.list) {
-        response.list = response.list.filter(email => 
-          !(email.mail_from === 'no-reply@guerrillamail.com' && 
-            email.mail_subject.includes('Welcome to Guerrilla Mail'))
-        );
+        response.list = this.filterWelcomeEmails(response.list);
       }
-      this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
       console.error('Failed to get email list:', error);
@@ -179,11 +195,16 @@ export class GuerrillaClient {
     }
   }
 
+  private filterWelcomeEmails(emails: Email[]): Email[] {
+    return emails.filter(email => 
+      !(email.mail_from === 'no-reply@guerrillamail.com' && 
+        email.mail_subject.includes('Welcome to Guerrilla Mail'))
+    );
+  }
+
   async fetchEmail(emailId: string): Promise<EmailContent> {
     try {
-      const response = await this.request<EmailContent>('fetch_email', { email_id: emailId });
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.request<EmailContent>('fetch_email', { email_id: emailId });
     } catch (error) {
       console.error('Failed to fetch email:', error);
       throw new Error('Failed to fetch email content. Please try again.');
@@ -196,15 +217,12 @@ export class GuerrillaClient {
 
   async forgetMe(emailAddr: string): Promise<EmailAddress> {
     try {
-      // Clear the session token
       this.sidToken = null;
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      document.cookie = 'PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       
-      // Generate a new email address
       const emailUser = this.generateEmailUser();
-      const response = await this.setEmailUser(emailUser);
-      
-      this.retryCount = 0;
-      return response;
+      return await this.setEmailUser(emailUser);
     } catch (error) {
       console.error('Failed to forget email:', error);
       throw new Error('Failed to get new email address. Please try again.');
@@ -217,9 +235,7 @@ export class GuerrillaClient {
       emailIds.forEach((id, index) => {
         params[`email_ids[${index}]`] = id;
       });
-      const response = await this.request('del_email', params);
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.request('del_email', params);
     } catch (error) {
       console.error('Failed to delete emails:', error);
       throw new Error('Failed to delete emails. Please try again.');
