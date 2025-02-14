@@ -190,16 +190,20 @@ export class GuerrillaClient {
     }
   }
 
+  generateEmailUser(): string {
+    return generateEmailUser();
+  }
+
   async forgetMe(emailAddr: string): Promise<EmailAddress> {
     try {
-      // First, forget the current email
-      await this.request<boolean>('forget_me', { email_addr });
+      // Clear the session token
+      this.sidToken = null;
       
-      // Then, get a new email address
-      const emailUser = generateEmailUser();
+      // Generate a new email address
+      const emailUser = this.generateEmailUser();
       const response = await this.setEmailUser(emailUser);
       
-      this.retryCount = 0; // Reset retry count on success
+      this.retryCount = 0;
       return response;
     } catch (error) {
       console.error('Failed to forget email:', error);

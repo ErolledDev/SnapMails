@@ -116,19 +116,33 @@ const EmailBox = () => {
     try {
       setLoading(true);
       setError(null);
-      await client.forgetMe(emailAddress);
-      const response = await client.getEmailAddress();
+      
+      // Clear local storage and session storage for email-related data
+      localStorage.removeItem(EMAIL_STORAGE_KEY);
+      localStorage.removeItem(EMAILS_STORAGE_KEY);
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      
+      // Clear state
+      setEmails([]);
+      setSelectedEmail(null);
+      
+      // Generate new email
+      const emailUser = client.generateEmailUser();
+      const response = await client.setEmailUser(emailUser);
+      
       setEmailAddress(response.email_addr);
       setNewEmailUser(response.email_addr.split('@')[0]);
-      setEmails([]);
-      checkEmails(false);
+      
+      // Store new email
+      localStorage.setItem(EMAIL_STORAGE_KEY, response.email_addr);
+      
     } catch (error) {
       console.error('Failed to get new email:', error);
       setError('Failed to get new email address. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [client, emailAddress, checkEmails]);
+  }, [client]);
 
   const renderEmailContent = useCallback((content: string) => {
     try {
