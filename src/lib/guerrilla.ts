@@ -8,8 +8,8 @@ const RETRY_DELAY = 1000; // Base delay in milliseconds
 const MAX_RETRIES = 3;
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 const RATE_LIMIT_DELAY = 1000; // 1 second between requests
-const MAX_INITIALIZATION_RETRIES = 5; // Increased from 3 to 5
-const INITIALIZATION_BACKOFF_DELAY = 2000; // 2 seconds base delay for initialization retries
+const MAX_INITIALIZATION_RETRIES = 5;
+const INITIALIZATION_BACKOFF_DELAY = 2000;
 
 interface EmailAddress {
   email_addr: string;
@@ -78,6 +78,8 @@ export class GuerrillaClient {
   }
 
   private async initializeSession(): Promise<void> {
+    if (this.isInitialized) return;
+
     // Check if we need to wait before retrying
     const now = Date.now();
     const timeSinceLastAttempt = now - this.lastInitializationAttempt;
@@ -90,7 +92,7 @@ export class GuerrillaClient {
       this.initializationRetries = 0;
       this.lastInitializationAttempt = 0;
       await this.delay(5000); // Wait 5 seconds before allowing new initialization attempts
-      throw new Error('Failed to initialize email service. Please try again.');
+      throw new Error('Failed to initialize email service after multiple attempts');
     }
 
     this.initializationRetries++;
@@ -105,20 +107,20 @@ export class GuerrillaClient {
             try {
               // Verify the token is still valid with a simple request
               const response = await this.makeRequest<EmailAddress>('get_email_address', {}, sidToken);
-              if (response.sid_token) {
+              if (response && response.sid_token) {
                 this.sidToken = response.sid_token;
                 this.isInitialized = true;
                 this.initializationRetries = 0;
                 this.lastInitializationAttempt = 0;
+                this.updateSession(response.sid_token);
                 return;
               }
             } catch (error) {
-              console.warn('Saved session validation failed:', error);
-              // Continue to create new session
+              console.warn('Saved session validation failed, creating new session');
             }
           }
         } catch (error) {
-          console.warn('Saved session invalid, creating new session');
+          console.warn('Invalid saved session, creating new session');
         }
       }
 
@@ -130,21 +132,20 @@ export class GuerrillaClient {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const response = await this.makeRequest<EmailAddress>('get_email_address', { lang: 'en' });
-          if (response.sid_token) {
+          if (response && response.sid_token) {
             this.updateSession(response.sid_token);
             this.initializationRetries = 0;
             this.lastInitializationAttempt = 0;
             return;
           }
+          throw new Error('Invalid response from server');
         } catch (error) {
-          if (attempt === 2) throw error; // Last attempt, propagate error
+          if (attempt === 2) throw error;
           await this.delay(INITIALIZATION_BACKOFF_DELAY * Math.pow(2, attempt));
         }
       }
-
-      throw new Error('Failed to initialize session');
     } catch (error) {
-      console.error('Failed to initialize session:', error);
+      console.error('Session initialization failed:', error);
       this.isInitialized = false;
       
       // Add exponential backoff delay before retrying
@@ -167,7 +168,7 @@ export class GuerrillaClient {
     } catch (error) {
       // Clear the failed promise
       this.initializationPromise = null;
-      this.initializationRetries = 0; // Reset retries for the new attempt
+      this.initializationRetries = 0;
       this.lastInitializationAttempt = 0;
       
       // Wait before trying again
@@ -229,6 +230,8 @@ export class GuerrillaClient {
     params: Record<string, string> = {},
     overrideSidToken?: string
   ): Promise<T> {
+    await this.ensureInitialized();
+
     // Rate limiting
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;

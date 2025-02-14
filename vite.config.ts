@@ -126,7 +126,10 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'any maskable'
           }
-        ]
+        ],
+        start_url: '/',
+        display: 'standalone',
+        orientation: 'portrait'
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
@@ -139,7 +142,8 @@ export default defineConfig({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 // 1 hour
-              }
+              },
+              networkTimeoutSeconds: 10
             }
           },
           {
@@ -153,7 +157,9 @@ export default defineConfig({
               }
             }
           }
-        ]
+        ],
+        skipWaiting: true,
+        clientsClaim: true
       }
     }),
     compression({
@@ -203,16 +209,12 @@ export default defineConfig({
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1000,
     assetsInlineLimit: 4096,
-    sourcemap: false,
+    sourcemap: process.env.NODE_ENV === 'development',
     cssCodeSplit: true,
     modulePreload: {
       polyfill: true
     },
-    cache: true,
-    optimizeDeps: {
-      include: ['react', 'react-dom', 'react-router-dom', 'lucide-react'],
-      exclude: []
-    }
+    cache: true
   },
   server: {
     headers: {
@@ -226,7 +228,7 @@ export default defineConfig({
     },
     compression: true,
     hmr: {
-      overlay: false
+      overlay: true
     }
   },
   preview: {
@@ -247,6 +249,6 @@ export default defineConfig({
     minifyIdentifiers: true,
     minifySyntax: true,
     minifyWhitespace: true,
-    drop: ['console', 'debugger']
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
   }
 });
