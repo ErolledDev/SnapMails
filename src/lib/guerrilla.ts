@@ -8,6 +8,8 @@ const RETRY_DELAY = 1000; // Base delay in milliseconds
 const MAX_RETRIES = 3;
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 const RATE_LIMIT_DELAY = 1000; // 1 second between requests
+const MAX_INITIALIZATION_RETRIES = 5; // Increased from 3 to 5
+const INITIALIZATION_BACKOFF_DELAY = 2000; // 2 seconds base delay for initialization retries
 
 interface EmailAddress {
   email_addr: string;
@@ -58,112 +60,198 @@ export class GuerrillaClient {
   private lastRequestTime = 0;
   private requestQueue: Promise<any> = Promise.resolve();
   private isInitialized = false;
+  private initializationPromise: Promise<void> | null = null;
+  private initializationRetries = 0;
+  private lastInitializationAttempt = 0;
 
   constructor() {
-    this.initializeSession();
+    // Initialize immediately but don't wait for it
+    this.initializationPromise = this.initializeSession().catch(error => {
+      console.error('Initial session initialization failed:', error);
+      this.initializationPromise = null;
+      return Promise.reject(error);
+    });
   }
 
-  private async initializeSession() {
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private async initializeSession(): Promise<void> {
+    // Check if we need to wait before retrying
+    const now = Date.now();
+    const timeSinceLastAttempt = now - this.lastInitializationAttempt;
+    if (timeSinceLastAttempt < INITIALIZATION_BACKOFF_DELAY) {
+      await this.delay(INITIALIZATION_BACKOFF_DELAY - timeSinceLastAttempt);
+    }
+    this.lastInitializationAttempt = Date.now();
+
+    if (this.initializationRetries >= MAX_INITIALIZATION_RETRIES) {
+      this.initializationRetries = 0;
+      this.lastInitializationAttempt = 0;
+      await this.delay(5000); // Wait 5 seconds before allowing new initialization attempts
+      throw new Error('Failed to initialize email service. Please try again.');
+    }
+
+    this.initializationRetries++;
+
     try {
       // First try to get session from storage
       const savedSession = sessionStorage.getItem(SESSION_STORAGE_KEY);
       if (savedSession) {
-        const { sidToken } = JSON.parse(savedSession);
-        if (sidToken) {
-          this.sidToken = sidToken;
-          this.isInitialized = true;
-          return;
+        try {
+          const { sidToken, timestamp } = JSON.parse(savedSession);
+          if (sidToken && timestamp && Date.now() - timestamp < 3600000) { // 1 hour
+            try {
+              // Verify the token is still valid with a simple request
+              const response = await this.makeRequest<EmailAddress>('get_email_address', {}, sidToken);
+              if (response.sid_token) {
+                this.sidToken = response.sid_token;
+                this.isInitialized = true;
+                this.initializationRetries = 0;
+                this.lastInitializationAttempt = 0;
+                return;
+              }
+            } catch (error) {
+              console.warn('Saved session validation failed:', error);
+              // Continue to create new session
+            }
+          }
+        } catch (error) {
+          console.warn('Saved session invalid, creating new session');
         }
       }
 
-      // Then try to get from cookie
-      const sidToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('PHPSESSID='))
-        ?.split('=')[1];
+      // Clear any existing session data
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      this.sidToken = null;
 
-      if (sidToken) {
-        this.sidToken = sidToken;
-        this.isInitialized = true;
-      }
-    } catch (error) {
-      console.warn('Failed to initialize session:', error);
-      // Don't set isInitialized to true if there's an error
-    }
-  }
-
-  private async ensureInitialized() {
-    if (!this.isInitialized) {
-      await this.initializeSession();
-      if (!this.isInitialized) {
-        // If still not initialized, try to get a new session
+      // Create a new session with retry logic
+      for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const response = await this.request<EmailAddress>('get_email_address', { lang: 'en' });
+          const response = await this.makeRequest<EmailAddress>('get_email_address', { lang: 'en' });
           if (response.sid_token) {
             this.updateSession(response.sid_token);
+            this.initializationRetries = 0;
+            this.lastInitializationAttempt = 0;
             return;
           }
         } catch (error) {
-          console.error('Failed to initialize new session:', error);
+          if (attempt === 2) throw error; // Last attempt, propagate error
+          await this.delay(INITIALIZATION_BACKOFF_DELAY * Math.pow(2, attempt));
         }
-        throw new Error('Failed to initialize email client. Please refresh the page.');
       }
+
+      throw new Error('Failed to initialize session');
+    } catch (error) {
+      console.error('Failed to initialize session:', error);
+      this.isInitialized = false;
+      
+      // Add exponential backoff delay before retrying
+      const backoffDelay = INITIALIZATION_BACKOFF_DELAY * Math.pow(2, this.initializationRetries - 1);
+      await this.delay(backoffDelay);
+      
+      return this.initializeSession();
     }
   }
 
-  private async request<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
+  private async ensureInitialized(): Promise<void> {
+    if (this.isInitialized) return;
+
+    if (!this.initializationPromise) {
+      this.initializationPromise = this.initializeSession();
+    }
+
+    try {
+      await this.initializationPromise;
+    } catch (error) {
+      // Clear the failed promise
+      this.initializationPromise = null;
+      this.initializationRetries = 0; // Reset retries for the new attempt
+      this.lastInitializationAttempt = 0;
+      
+      // Wait before trying again
+      await this.delay(INITIALIZATION_BACKOFF_DELAY);
+      
+      // Try one more time
+      this.initializationPromise = this.initializeSession();
+      await this.initializationPromise;
+    }
+
+    if (!this.isInitialized) {
+      throw new Error('Failed to initialize email client');
+    }
+  }
+
+  private async makeRequest<T>(
+    endpoint: string,
+    params: Record<string, string> = {},
+    overrideSidToken?: string
+  ): Promise<T> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+    try {
+      const searchParams = new URLSearchParams({
+        f: endpoint,
+        ...params,
+        ...(overrideSidToken ? { sid_token: overrideSidToken } : this.sidToken ? { sid_token: this.sidToken } : {})
+      });
+
+      const response = await fetch(`${API_BASE}?${searchParams}`, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Origin': window.location.origin
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  private async request<T>(
+    endpoint: string,
+    params: Record<string, string> = {},
+    overrideSidToken?: string
+  ): Promise<T> {
     // Rate limiting
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
     if (timeSinceLastRequest < RATE_LIMIT_DELAY) {
-      await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY - timeSinceLastRequest));
+      await this.delay(RATE_LIMIT_DELAY - timeSinceLastRequest);
     }
 
     return new Promise((resolve, reject) => {
       this.requestQueue = this.requestQueue
         .then(async () => {
           try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+            const data = await this.makeRequest<T>(endpoint, params, overrideSidToken);
 
-            const searchParams = new URLSearchParams({
-              f: endpoint,
-              ...params,
-              ...(this.sidToken ? { sid_token: this.sidToken } : {})
-            });
-
-            const response = await fetch(`${API_BASE}?${searchParams}`, {
-              signal: controller.signal,
-              headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache',
-                'Origin': window.location.origin
-              },
-              credentials: 'include'
-            });
-
-            clearTimeout(timeout);
-            this.lastRequestTime = Date.now();
-
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.error) {
-              throw new Error(data.error);
-            }
-
-            if (data.sid_token) {
+            if ('sid_token' in data && typeof data.sid_token === 'string') {
               this.updateSession(data.sid_token);
             }
 
+            this.lastRequestTime = Date.now();
             this.retryCount = 0;
             resolve(data);
           } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
-              reject(new Error('Request timed out. Please try again.'));
+              reject(new Error('Request timed out'));
               return;
             }
 
@@ -174,11 +262,11 @@ export class GuerrillaClient {
                 REQUEST_TIMEOUT
               );
               console.warn(`Retrying request (${this.retryCount}/${MAX_RETRIES}) after ${delay}ms`);
-              await new Promise(resolve => setTimeout(resolve, delay));
+              await this.delay(delay);
               this.request<T>(endpoint, params).then(resolve).catch(reject);
             } else {
               this.retryCount = 0;
-              reject(new Error('Failed to connect to email server. Please try again later.'));
+              reject(new Error('Failed to connect to email server'));
             }
           }
         })
@@ -190,9 +278,10 @@ export class GuerrillaClient {
     this.sidToken = sidToken;
     this.isInitialized = true;
     try {
-      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ sidToken }));
-      const expires = new Date(Date.now() + 3600000); // 1 hour
-      document.cookie = `PHPSESSID=${sidToken}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ 
+        sidToken,
+        timestamp: Date.now()
+      }));
     } catch (error) {
       console.warn('Failed to update session storage:', error);
     }
@@ -200,11 +289,11 @@ export class GuerrillaClient {
 
   async getEmailAddress(lang = 'en'): Promise<EmailAddress> {
     try {
-      const response = await this.request<EmailAddress>('get_email_address', { lang });
-      return response;
+      await this.ensureInitialized();
+      return await this.request<EmailAddress>('get_email_address', { lang });
     } catch (error) {
       console.error('Failed to get email address:', error);
-      throw new Error('Failed to generate email address. Please refresh and try again.');
+      throw new Error('Failed to generate email address');
     }
   }
 
@@ -214,7 +303,7 @@ export class GuerrillaClient {
       return await this.request<EmailAddress>('set_email_user', { email_user: emailUser, lang });
     } catch (error) {
       console.error('Failed to set email user:', error);
-      throw new Error('Failed to set email address. Please try again.');
+      throw new Error('Failed to set email address');
     }
   }
 
@@ -228,10 +317,7 @@ export class GuerrillaClient {
       return response;
     } catch (error) {
       console.error('Failed to check email:', error);
-      if (error instanceof Error) {
-        throw new Error(`Failed to check emails: ${error.message}`);
-      }
-      throw new Error('Failed to check emails. Please try again.');
+      throw new Error('Failed to check emails');
     }
   }
 
@@ -245,7 +331,7 @@ export class GuerrillaClient {
       return response;
     } catch (error) {
       console.error('Failed to get email list:', error);
-      throw new Error('Failed to retrieve emails. Please try again.');
+      throw new Error('Failed to retrieve emails');
     }
   }
 
@@ -262,7 +348,7 @@ export class GuerrillaClient {
       return await this.request<EmailContent>('fetch_email', { email_id: emailId });
     } catch (error) {
       console.error('Failed to fetch email:', error);
-      throw new Error('Failed to fetch email content. Please try again.');
+      throw new Error('Failed to fetch email content');
     }
   }
 
@@ -276,12 +362,12 @@ export class GuerrillaClient {
       const response = await this.request<EmailAddress>('forget_me', { email_addr: emailAddr });
       this.sidToken = null;
       this.isInitialized = false;
+      this.initializationPromise = null;
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
-      document.cookie = 'PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       return response;
     } catch (error) {
       console.error('Failed to forget email:', error);
-      throw new Error('Failed to get new email address. Please try again.');
+      throw new Error('Failed to get new email address');
     }
   }
 
@@ -295,7 +381,7 @@ export class GuerrillaClient {
       return await this.request('del_email', params);
     } catch (error) {
       console.error('Failed to delete emails:', error);
-      throw new Error('Failed to delete emails. Please try again.');
+      throw new Error('Failed to delete emails');
     }
   }
 }
