@@ -6,23 +6,6 @@
   html {
     -webkit-tap-highlight-color: transparent;
   }
-
-  /* Improved font contrast */
-  .text-gray-600 {
-    color: #4B5563;
-  }
-
-  .dark .text-gray-200 {
-    color: #E5E7EB;
-  }
-
-  .text-gray-700 {
-    color: #374151;
-  }
-
-  .dark .text-gray-100 {
-    color: #F3F4F6;
-  }
 }
 
 @layer components {
@@ -87,31 +70,9 @@
   }
 }
 
-/* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
     transition: none !important;
-  }
-}
-
-/* Performance optimizations */
-* {
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Improved focus styles */
-:focus-visible {
-  outline: 2px solid #3B82F6;
-  outline-offset: 2px;
-}
-
-/* Better tap targets on mobile */
-@media (max-width: 640px) {
-  button, a {
-    min-height: 44px;
-    min-width: 44px;
   }
 }

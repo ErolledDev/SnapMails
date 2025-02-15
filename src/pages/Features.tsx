@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield, Clock, Lock, RefreshCw, Mail, Zap, Edit2, Globe } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 export default function Features() {
   const features = [
@@ -46,45 +47,57 @@ export default function Features() {
   ];
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-16" role="main">
-      <div className="text-center mb-16">
-        <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
-          Powerful Features
-        </h1>
-        <p className="text-lg text-gray-700 dark:text-gray-200 max-w-2xl mx-auto mb-8 leading-relaxed">
-          Discover what makes SnapMails the most versatile temporary email service available.
-        </p>
-      </div>
+    <>
+      <Helmet>
+        <title>Features - Temp Mail - Free Disposable Temporary Email | Spam-Free Temp Mail</title>
+        <meta name="description" content="Explore SnapMails' powerful features: instant email generation, custom addresses, 500+ domains, real-time inbox, and more. Free temporary email service with no registration required." />
+        <meta property="og:title" content="Features - SnapMails Free Temp Mail | Secure Disposable Email Service" />
+        <meta property="og:description" content="Explore SnapMails' powerful features: instant email generation, custom addresses, 500+ domains, real-time inbox, and more. Free temporary email service with no registration required." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://snapmails.xyz/features" />
+        <link rel="canonical" href="https://snapmails.xyz/features" />
+      </Helmet>
+      
+      <main className="max-w-7xl mx-auto px-4 py-16" role="main">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
+            Powerful Features
+          </h1>
+          <p className="text-lg text-gray-700 dark:text-gray-200 max-w-2xl mx-auto mb-8 leading-relaxed">
+            Discover what makes SnapMails the most versatile temporary email service available.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" role="list">
-        {features.map((feature, index) => (
-          <div
-            key={index}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 hover:-translate-y-1 hover:bg-gradient-to-br hover:from-blue-50 hover:to-white"
-            role="listitem"
-          >
-            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4" aria-hidden="true">
-              {feature.icon}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" role="list">
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 hover:-translate-y-1 hover:bg-gradient-to-br hover:from-blue-50 hover:to-white"
+              role="listitem"
+            >
+              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4" aria-hidden="true">
+                {feature.icon}
+              </div>
+              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+              <p className="text-gray-600 text-sm">{feature.description}</p>
             </div>
-            <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-            <p className="text-gray-600 text-sm">{feature.description}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <div className="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-center">
-        <h2 className="text-2xl font-bold mb-4 text-white">Ready to get started?</h2>
-        <p className="text-blue-100 mb-8">
-          Try SnapMails now and experience the best temporary email service available.
-        </p>
-        <a
-          href="/"
-          className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors"
-          aria-label="Get started with SnapMails"
-        >
-          Get Started
-        </a>
-      </div>
-    </main>
+        <div className="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4 text-white">Ready to get started?</h2>
+          <p className="text-blue-100 mb-8">
+            Try SnapMails now and experience the best temporary email service available.
+          </p>
+          <a
+            href="/"
+            className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors"
+            aria-label="Get started with SnapMails"
+          >
+            Get Started
+          </a>
+        </div>
+      </main>
+    </>
   );
 }

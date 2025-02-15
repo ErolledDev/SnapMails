@@ -1,15 +1,14 @@
-// Guerrilla Mail API client
-// Implements Guerrilla Mail JSON API v1.6
-import { generateEmailUser } from './words';
+// Guerrilla Mail API Client
+// Based on API v1.6 documentation
 
-const API_BASE = 'https://api.guerrillamail.com/ajax.php';
-const SESSION_STORAGE_KEY = 'tempmail_session';
+const API_BASE = '/api/guerrillamail';
 
 interface EmailAddress {
   email_addr: string;
   email_timestamp: number;
   sid_token: string;
   alias: string;
+  alias_error: string;
 }
 
 interface Email {
@@ -40,92 +39,92 @@ interface EmailContent extends Email {
 
 export class GuerrillaClient {
   private sidToken: string | null = null;
-  private retryCount = 0;
-  private maxRetries = 3;
-  private retryDelay = 1000; // Base delay in milliseconds
+  private lastRequestTime = 0;
+  private readonly RATE_LIMIT_DELAY = 1000; // 1 second between requests
+  private readonly REQUEST_TIMEOUT = 30000; // 30 seconds
+  private readonly MAX_RETRIES = 3;
+  private readonly RETRY_DELAY = 1000; // Base delay in milliseconds
 
-  constructor() {
-    // Try to restore session from session storage first, then cookie
-    const savedSession = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (savedSession) {
-      try {
-        const { sidToken } = JSON.parse(savedSession);
-        if (sidToken) {
-          this.sidToken = sidToken;
-        }
-      } catch (e) {
-        console.warn('Failed to parse saved session:', e);
-      }
-    } else {
-      const sidToken = document.cookie.split('; ').find(row => row.startsWith('PHPSESSID='))?.split('=')[1];
-      if (sidToken) {
-        this.sidToken = sidToken;
-      }
-    }
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  private async request<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
-    try {
-      // Add abort controller for timeout
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  private async makeRequest<T>(
+    endpoint: string, 
+    params: Record<string, string> = {},
+    retryCount = 0
+  ): Promise<T> {
+    // Rate limiting
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    if (timeSinceLastRequest < this.RATE_LIMIT_DELAY) {
+      await this.delay(this.RATE_LIMIT_DELAY - timeSinceLastRequest);
+    }
 
-      const searchParams = new URLSearchParams({
-        f: endpoint,
-        ...params,
-        ip: '127.0.0.1',
-        agent: navigator.userAgent.substring(0, 160),
-        ...(this.sidToken ? { sid_token: this.sidToken } : {})
-      });
+    const searchParams = new URLSearchParams({
+      f: endpoint,
+      ...params,
+      ...(this.sidToken ? { sid_token: this.sidToken } : {})
+    });
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.REQUEST_TIMEOUT);
 
       const response = await fetch(`${API_BASE}?${searchParams}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
         signal: controller.signal
       });
-      
-      clearTimeout(timeout);
-      
+
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       
       if (data.error) {
         throw new Error(data.error);
       }
-      
-      if (data.sid_token) {
+
+      // Update sidToken if present in response
+      if ('sid_token' in data && typeof data.sid_token === 'string') {
         this.sidToken = data.sid_token;
-        // Save to session storage
-        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ sidToken: data.sid_token }));
-        // Set session cookie with proper expiration
-        const expires = new Date(Date.now() + 3600000); // 1 hour
-        document.cookie = `PHPSESSID=${data.sid_token}; path=/; expires=${expires.toUTCString()}; SameSite=Strict`;
       }
 
-      this.retryCount = 0; // Reset retry count on success
+      this.lastRequestTime = Date.now();
       return data;
     } catch (error) {
-      if (this.retryCount < this.maxRetries) {
-        this.retryCount++;
-        // Exponential backoff with jitter
-        const delay = Math.min(
-          this.retryDelay * Math.pow(2, this.retryCount - 1) + Math.random() * 1000,
-          30000 // Max delay of 30 seconds
-        );
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return this.request<T>(endpoint, params);
+      if (error instanceof Error) {
+        // Handle timeout
+        if (error.name === 'AbortError') {
+          throw new Error('Request timed out');
+        }
+
+        // Retry on network errors with exponential backoff
+        if (retryCount < this.MAX_RETRIES) {
+          const delay = Math.min(
+            this.RETRY_DELAY * Math.pow(2, retryCount) + Math.random() * 1000,
+            this.REQUEST_TIMEOUT
+          );
+          console.warn(`Retrying request (${retryCount + 1}/${this.MAX_RETRIES}) after ${delay}ms`);
+          await this.delay(delay);
+          return this.makeRequest(endpoint, params, retryCount + 1);
+        }
       }
-      throw error;
+
+      console.error('API request failed:', error);
+      throw new Error('Failed to connect to email server. Please try again later.');
     }
   }
 
   async getEmailAddress(lang = 'en'): Promise<EmailAddress> {
     try {
-      const emailUser = generateEmailUser();
-      const response = await this.setEmailUser(emailUser, lang);
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.makeRequest<EmailAddress>('get_email_address', { lang });
     } catch (error) {
       console.error('Failed to get email address:', error);
       throw new Error('Failed to generate email address. Please try again.');
@@ -134,47 +133,28 @@ export class GuerrillaClient {
 
   async setEmailUser(emailUser: string, lang = 'en'): Promise<EmailAddress> {
     try {
-      const response = await this.request<EmailAddress>('set_email_user', { email_user: emailUser, lang });
-      // Store the email timestamp in a cookie
-      document.cookie = `email_timestamp=${Date.now()}; path=/; max-age=3600; SameSite=Strict`;
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.makeRequest<EmailAddress>('set_email_user', { 
+        email_user: emailUser,
+        lang 
+      });
     } catch (error) {
       console.error('Failed to set email user:', error);
-      throw new Error('Failed to set email address. Please try again.');
+      throw new Error('Failed to set email address. Please try a different address.');
     }
   }
 
   async checkEmail(seq = '0'): Promise<EmailList> {
     try {
-      const response = await this.request<EmailList>('check_email', { seq });
-      // Filter out welcome message
-      if (response.list) {
-        response.list = response.list.filter(email => 
-          !(email.mail_from === 'no-reply@guerrillamail.com' && 
-            email.mail_subject.includes('Welcome to Guerrilla Mail'))
-        );
-      }
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.makeRequest<EmailList>('check_email', { seq });
     } catch (error) {
       console.error('Failed to check email:', error);
-      throw new Error('Failed to check emails. Please try again.');
+      throw new Error('Failed to check for new emails. Please try again.');
     }
   }
 
   async getEmailList(offset = '0', seq = '0'): Promise<EmailList> {
     try {
-      const response = await this.request<EmailList>('get_email_list', { offset, seq });
-      // Filter out welcome message
-      if (response.list) {
-        response.list = response.list.filter(email => 
-          !(email.mail_from === 'no-reply@guerrillamail.com' && 
-            email.mail_subject.includes('Welcome to Guerrilla Mail'))
-        );
-      }
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.makeRequest<EmailList>('get_email_list', { offset, seq });
     } catch (error) {
       console.error('Failed to get email list:', error);
       throw new Error('Failed to retrieve emails. Please try again.');
@@ -183,23 +163,21 @@ export class GuerrillaClient {
 
   async fetchEmail(emailId: string): Promise<EmailContent> {
     try {
-      const response = await this.request<EmailContent>('fetch_email', { email_id: emailId });
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.makeRequest<EmailContent>('fetch_email', { email_id: emailId });
     } catch (error) {
       console.error('Failed to fetch email:', error);
       throw new Error('Failed to fetch email content. Please try again.');
     }
   }
 
-  async forgetMe(emailAddr: string): Promise<boolean> {
+  async forgetMe(emailAddr: string): Promise<EmailAddress> {
     try {
-      const response = await this.request<boolean>('forget_me', { email_addr });
-      this.retryCount = 0; // Reset retry count on success
+      const response = await this.makeRequest<EmailAddress>('forget_me', { email_addr: emailAddr });
+      this.sidToken = null; // Clear session after forgetting
       return response;
     } catch (error) {
       console.error('Failed to forget email:', error);
-      throw new Error('Failed to forget email address. Please try again.');
+      throw new Error('Failed to get new email address. Please try again.');
     }
   }
 
@@ -209,12 +187,30 @@ export class GuerrillaClient {
       emailIds.forEach((id, index) => {
         params[`email_ids[${index}]`] = id;
       });
-      const response = await this.request('del_email', params);
-      this.retryCount = 0; // Reset retry count on success
-      return response;
+      return await this.makeRequest('del_email', params);
     } catch (error) {
       console.error('Failed to delete emails:', error);
       throw new Error('Failed to delete emails. Please try again.');
     }
+  }
+
+  generateEmailUser(): string {
+    // Generate a more readable email username
+    const adjectives = ['happy', 'clever', 'brave', 'bright', 'calm', 'eager', 'fair', 'kind'];
+    const nouns = ['tiger', 'eagle', 'wolf', 'bear', 'lion', 'hawk', 'deer', 'fox'];
+    
+    const getRandomElement = (arr: string[]) => {
+      const randomValues = new Uint32Array(1);
+      window.crypto.getRandomValues(randomValues);
+      return arr[randomValues[0] % arr.length];
+    };
+
+    const randomNumber = () => {
+      const randomValues = new Uint32Array(1);
+      window.crypto.getRandomValues(randomValues);
+      return String(randomValues[0] % 1000).padStart(3, '0');
+    };
+
+    return `${getRandomElement(adjectives)}${getRandomElement(nouns)}${randomNumber()}`;
   }
 }

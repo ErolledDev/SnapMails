@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 export default function FAQ() {
   const faqs = [
@@ -46,36 +47,48 @@ export default function FAQ() {
   ];
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-16" role="main">
-      <h1 className="text-center text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Frequently Asked Questions</h1>
+    <>
+      <Helmet>
+        <title>FAQ -   Common Questions Answered - Temp Mail - Free Disposable Temporary Email | Spam-Free Temp Mail </title>
+        <meta name="description" content="Find answers to frequently asked questions about SnapMails' free temporary email service. Learn how to use our disposable email addresses, features, and privacy protection." />
+        <meta property="og:title" content="FAQ - SnapMails Temporary Email Service | Common Questions Answered" />
+        <meta property="og:description" content="Find answers to frequently asked questions about SnapMails' free temporary email service. Learn how to use our disposable email addresses, features, and privacy protection." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://snapmails.xyz/faq" />
+        <link rel="canonical" href="https://snapmails.xyz/faq" />
+      </Helmet>
       
-      <div className="space-y-6">
-        {faqs.map((faq, index) => (
-          <details
-            key={index}
-            className="group bg-white rounded-lg shadow-sm border border-gray-200 open:shadow-md transition-all duration-300"
-          >
-            <summary className="flex items-center justify-between cursor-pointer p-6" role="button" aria-expanded="false">
-              <h3 className="text-lg font-medium pr-4">{faq.question}</h3>
-              <ChevronDown className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" aria-hidden="true" />
-            </summary>
-            <div className="px-6 pb-6 text-gray-600">
-              {faq.answer}
-            </div>
-          </details>
-        ))}
-      </div>
+      <main className="max-w-4xl mx-auto px-4 py-16" role="main">
+        <h1 className="text-center text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Frequently Asked Questions</h1>
+        
+        <div className="space-y-6">
+          {faqs.map((faq, index) => (
+            <details
+              key={index}
+              className="group bg-white rounded-lg shadow-sm border border-gray-200 open:shadow-md transition-all duration-300"
+            >
+              <summary className="flex items-center justify-between cursor-pointer p-6" role="button" aria-expanded="false">
+                <h3 className="text-lg font-medium pr-4">{faq.question}</h3>
+                <ChevronDown className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div className="px-6 pb-6 text-gray-600">
+                {faq.answer}
+              </div>
+            </details>
+          ))}
+        </div>
 
-      <div className="mt-12 text-center">
-        <p className="text-gray-600 mb-4">Still have questions?</p>
-        <a
-          href="mailto:support@snapmails.xyz"
-          className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-          aria-label="Contact Support via Email"
-        >
-          Contact Support
-        </a>
-      </div>
-    </main>
+        <div className="mt-12 text-center">
+          <p className="text-gray-600 mb-4">Still have questions?</p>
+          <a
+            href="mailto:support@snapmails.xyz"
+            className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            aria-label="Contact Support via Email"
+          >
+            Contact Support
+          </a>
+        </div>
+      </main>
+    </>
   );
 }
