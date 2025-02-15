@@ -68,12 +68,16 @@ export class GuerrillaClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.REQUEST_TIMEOUT);
 
-      const response = await fetch(`${API_BASE}?${searchParams}`, {
+      const response = await fetch(`${API_BASE}?${searchParams.toString()}`, {
+        method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache',
+          'X-Requested-With': 'XMLHttpRequest'
         },
-        signal: controller.signal
+        signal: controller.signal,
+        mode: 'cors',
+        credentials: 'omit'
       });
 
       clearTimeout(timeoutId);
@@ -90,6 +94,7 @@ export class GuerrillaClient {
 
       if ('sid_token' in data && typeof data.sid_token === 'string') {
         this.sidToken = data.sid_token;
+        localStorage.setItem('guerrilla_sid_token', this.sidToken);
       }
 
       this.lastRequestTime = Date.now();
@@ -115,6 +120,10 @@ export class GuerrillaClient {
   }
 
   async getEmailAddress(lang = 'en'): Promise<EmailAddress> {
+    const savedToken = localStorage.getItem('guerrilla_sid_token');
+    if (savedToken) {
+      this.sidToken = savedToken;
+    }
     return await this.makeRequest<EmailAddress>('get_email_address', { lang });
   }
 
@@ -138,6 +147,7 @@ export class GuerrillaClient {
   }
 
   async forgetMe(emailAddr: string): Promise<EmailAddress> {
+    localStorage.removeItem('guerrilla_sid_token');
     const response = await this.makeRequest<EmailAddress>('forget_me', { email_addr: emailAddr });
     this.sidToken = null;
     return response;

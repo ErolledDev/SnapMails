@@ -1,0 +1,1282 @@
+## Version 1 api: 
+
+Guerrilla Mail JSON API
+version 1.0, 19th Apr 2011
+
+
+The latest version of this document is available on Google Docs here: https://docs.google.com/document/d/1Qw5KQP1j57BPTDmms5nspe-QAjNEsNg8cQHpAAycYNM/edit?hl=en
+
+Introduction
+
+Guerrilla Mail provides a JSON API through HTTP. The API is public and open to all.
+
+
+The API URL is located at: http://api.guerrillamail.com/ajax.php
+
+
+Each request to the above URL must have a parameter ‘f’, indicating the function name. It should also pass ‘ip’ and ‘agent’ to indicate the IP address and user-agent of the user-end. Followed by the argument(s) as required by the function specification. The result will be returned in a JSON encoded string.
+
+
+Example:  http://api.guerrillamail.com/ajax.php?f=get_email_address&ip=127.0.0.1&agent=Mozilla_foo_bar
+
+
+As a requirement, the client interacting with the API must be able to save, send and receive the following cookies
+
+
+SUBSCR - A subscriber cookie. Set by the server if the email address has an active subscription. The client must save this value if changed, but does not need to send as a cookie at each request. (The value is later used as a parameter to a function call)
+
+
+PHPSESSID - A session ID. Set by the server for each client to maintain state. The client must always look for this cookie in the HTTP header, remember it (if changed), and then provide it as cookie data in each HTTP request. This value can change at every call, and when it changes, it indicates that a new session was started; the client would need to re-fresh the interace with new data.
+
+
+Note: The API may be rate limited, but we do not publish our rate limits. Please use this API carefully.
+
+
+Created a guerrilla mail app? Let us know support@guerrillamail.com
+
+Flow
+
+1. User accesses the Guerrilla Mail Application, an email address is given. App initialization, the mail box is loaded. (Call to get_email_address is made, the client can get the session id, email address and email address’ timestamp)
+
+
+2. Check for new email, this could be a function that works in the background (A call to check_email is made)
+
+
+3. New email arrives, the user clicks on it. Email is fetched and displayed (A call to fetch_email is made)
+
+
+4. To change the email address - the user can set the email address.  (A call to set_email_user is made). After making a call to this function, the client can fetch the email list for this email by checking the email. Note: When a user changes the email address from one address to another, the old email address and its emails are NOT deleted, if the user changes back to the old address then their messages will still be there until the address expires or the message is 1 hour old.
+
+
+5. Forget email - tell the server forget the current email address (but do not delete it) (A call to forget_me is made)
+
+
+6. Extend time - Tell the server extend time for the current address (A call to extend is made)
+
+
+7. Email expired - The client should keep time of when the email expires. Some calls also return a timestamp. The timestamp is a Unix timestamp, indicating when the address was created. The client can calculate how many minutes are remaining:
+
+
+seconds remaining = 3600 - Current Timestamp - Email Timestamp
+
+
+
+Note: A session can expire after about 18 minutes of inactivity. If a session expires, a new email address will be generated when making a call to get_email_address , a user can always return to the old email address by making a call to set_email_user
+
+
+Functions
+Each HTTP request to http://api.guerrillamail.com/ajax.php is considered a function call. The client could use GET when querying for data, and POST when setting or deleting data, although this is not strictly enforced. Each request must contain the ‘f’ parameter containing the function name, the ‘ip’ parameter of the end user, and the ‘agent’ parameter of the end user’s user agent.
+
+Function
+get_email_address
+
+
+Arguments
+
+‘lang’ - a string representing the language code. Currently supported: en, fr, nl, ru, tr, uk, ar, ko, jp, zh, zh-hant
+
+‘SUBSCR’ - the subscriber cookie data, given to the client in a previous session
+
+Description
+
+The function is used to initialize a session and set the client with an email address. If the session already exists, then it will return the email address details of the existing session. If a new session needs to be created, then it will first check for the SUBSCR cookie to create a session for a subscribed address, otherwise it will create new email address randomly.
+
+
+The session is maintained using HTTP Cookies. The cookie name is ‘PHPSESSID’, and it will be given in the resulting HTTP header. The client should always store this cookie and send it whenever making an API call. A new session will be created when the ‘PHPSESSID’ cookie is not given by the client. The function also generates a new welcome email for the user.
+
+
+To send ‘PHPSESSID’ in a HTTP request, add the following line to the header:
+
+
+Cookie: PHPSESSID=ABC1234\r\n";
+
+
+Where ‘ABC1234’ is the data for the ‘PHPSESSID’ cookie.
+
+
+The client should always watch the ‘PHPSESSID’ cookie for changes. If it changes, it needs to update this value, and pass it in subsequent calls.
+
+
+
+Returns
+
+An object with the following properties:
+
+
+‘email_addr’ - The email address that that was determined. If a previous session was found, then it will be the email address of that session. If the SUBSCR cookie was matched, it will be the email in the cookie, otherwise a new random email address will be created.
+
+‘email_timestamp’ - a UNIX timestamp when the email address was created. Used by the client to keep track of expiry.
+
+‘s_active’ - Subscription active, Y or N
+‘s_date’ - The full date of the subscription
+‘s_time’ - The UNIX timestamp of subscription
+‘s_time_expires’ - The UNIX timestamp for when the subscription expires
+
+Note that the server could set a new SUBSCR cookie, also it may return with a new PHPSESSID cookie which you would need to update and store in your client.
+
+Function
+
+set_email_user
+
+
+Arguments
+
+‘email_user’ - String. The username part of an email address. example: test@guerrillamailblock.com, the email_user part would be ‘test’
+
+‘lang’ - String. The language code, eg. ‘en’
+
+Note: PHPSESSID must be passed as a cookie
+
+
+Description
+
+Set the email address to a different email address. If the email address is a subscriber, then return the subscription details. If the email is not a subscriber, then the email address will be given 60 minutes again. A new email address will be generated if the email address is not in the database and a welcome email message will be generated.
+
+
+Returns
+
+Similar to get_email_address, this function returns an object with the following properties:
+
+
+‘email_addr’ - The email address that that was determined. If a previous session was found, then it will be the email address of that session. If the SUBSCR cookie was matched, it will be the email in the cookie, otherwise a new random email address will be created. Eg, test@guerrillamailblock.com
+
+‘email_timestamp’ - a UNIX timestamp when the email address was created. Used by the client to keep track of expiry.
+
+‘s_active’ - Subscription active, Y or N
+‘s_date’ - The full date of the subscription
+‘s_time’ - The UNIX timestamp of subscription
+‘s_time_expires’ - The UNIX timestamp for when the subscription expires
+
+Function
+check_email
+
+
+Arguments
+
+seq - The sequence number (id) of the oldest email
+Description
+
+Check for new email on the server. Returns a list of the newest messages. The maximum size of the list is 20 items.
+
+
+The client should not check email too many times as to not overload the server. Do not check if the email expired, the email checking routing should pause if the email expired.
+
+
+Returns
+
+An an object with the following properties:
+
+
+‘list’ - A list of messages, represented as an array of objects. Each object has the following properties:
+        ‘mail_id’,
+‘mail_from’ (email address of sender),
+
+‘mail_subject’,
+
+‘mail_excerpt’ (snippet from the email),
+
+‘mail_timestamp’ (a UNIX timestamp),
+
+‘mail_read’ (1 if read, 0 if not), ‘mail_date’
+
+
+Note: ‘mail_subject’ and ‘mail_excerpt’ are escaped using HTML Entities.
+
+
+‘count’ - The number of emails matched. This can be much more than the maximum that can be returned (20)! This number indicates the total number of new emails in the database. (If you want to get the emails after the first 20, then make another call with the get_older_list function
+‘email’ - The email address which the list is for. Eg. test@guerrillamailblock.com The client would need to watch this variable to detect any changes to sync the address.
+‘ts’ - The timestamp of the email address, time of when the email address was created. The client can use this variable to sync the time. Emails expire after 60 minutes
+‘s_active’ - Subscription active, Y or N
+‘s_date’ - The full date of the subscription
+‘s_time’ - The UNIX timestamp of subscription
+‘s_time_expires’ - The UNIX timestamp for when the subscription expires
+
+Function
+
+get_email_list
+
+
+Arguments
+
+‘offset’ - How many emails to start from (skip). Starts from 0
+
+‘seq’ - The sequence number(id) of the first email, optional
+
+Description
+
+Gets a maximum of 20 messages from the specified offset. Offset of 0 will fetch a list of the first 10 emails, offset of 10 will fetch a list of the next 10, and so on.
+
+
+This function is useful for populating the initial email list. Note: When returned, subject and email excerpt are escaped using HTML Entities.
+
+
+Returns
+Identical to check_email described above
+
+
+
+Function
+
+fetch_email
+
+
+Arguments
+
+email_id - The id of the email to fetch
+
+Description
+
+Get the contents of an email.
+
+
+Notes:
+
+- All HTML in the body of the email is filtered. Eg, Javascript, applets, iframes, etc is removed.
+
+- All images in the email are relative to http://www.guerrillamail.com/res.php - this script will generate a ‘blocked by GM’ image, indicating that the image was blocked. The CGI parameters for this script are as follows:
+
+        r = Is it a resource? 1 if true. Always 1
+
+        n= Node. The element type. Can be a string of letters (a-z)
+
+        q= The query string for the original image. This is URL Encoded
+
+        Example URL: http://www.guerrillamail.com/res.php?r=1&n=img&q=http%3A%2F%2Fstatic.groupon.de%2Fnewsletter_ums%2Flogo_groupon_de_DE.gif
+
+        When an email is displayed by the client, it should displayed the blocked images generated by res.php. When a ‘Display Images’ button is clicked, the client should use a regular expression to replace the links to res.php with the links to the image found in the ‘q’ parameter. Here is an example of this regular expression in the Javascript client:
+
+
+// Javascript example: This will replace all the res.php links inside double quotes with the URL stored in the q parameter. Since the URL in the q parameter is URL Escaped, we need to define an anonymous function to unescape the matched parameter. The ‘g’ flag tells the regex engine to replace all occurrences in the string.
+
+
+temp_html = temp_html.replace(/"\/res\.php\?r=1&amp;n=[a-z]+&amp;q=([^"^&]+)"/g, function(str, p1, offset, s) {return unescape (p1); } );
+
+      // Sometimes the link can be enclosed inside html encoded quotes, &quot;
+
+temp_html = temp_html.replace(/&quot;\/res\.php\?r=1&amp;n=[a-z]+&amp;q=([^"]+)&quot;/g, function(str, p1, offset, s) {return "&quot;"+unescape(p1)+"&quot;" ; } );
+
+
+Here is the above example written as PHP code (using the ‘e’ modifier allows us to call the urldecode function on the matched parameter):
+
+
+$source = preg_replace ('#"/res\.php\?r=1&amp;n=img&amp;q=([^"]+)"#e', "urldecode('\\1')", $source);
+
+
+$source = preg_replace ('#&quot;/res\.php\?r=1&amp;n=img&amp;q=([^"]+)&quot;#e', "urldecode('\\1')", $source);
+
+
+
+- Subject and email excerpt are escaped using HTML Entities.
+
+- Only emails owned by the current session id can be fetched.
+
+
+Function
+forget_me
+
+Arguments
+email_addr
+Description
+Forget the current email address. This will not stop the session, the existing session will be maintained. A subsequent call to get_email_address will fetch a new email address or the client can call set_email_user to set a new address. Typically, a user would want to set a new address manually after clicking the ‘forget me’ button.
+
+
+Returns
+True if successful. Note that the SUBSCR cookie will be deleted after making this call, however, PHPSESSID will persist.
+
+
+
+
+Function
+del_email
+
+Arguments
+email_ids - array or an integer, in the following format: email_ids[]=425&email_ids[]=426&email_ids[]=427
+
+Where 425, 426 and 427 are the ids of emails to delete. In a HTTP request, this parameter would be encoded like this:
+email_ids%5B%5D=425&email_ids%5B%5D=426&email_ids%5B%5D=427
+
+
+(See example PHP code below for how the $req string is generated. Another example here http://snipplr.com/view/4444/passing-an-array-through-get-request/)
+
+
+Description
+Delete the emails from the server
+
+
+        Returns
+An array of deleted email ids
+
+
+
+Function
+extend
+
+
+Arguments
+(none)
+
+Description
+Extend the email address time by 1 hour. A maximum of 2 hours can be extended.
+Returns
+An object with the following properties:
+
+
+‘expired’ - true or false, indicating if the email has expired
+
+‘email_timestamp’ - A UNIX timestamp indicating the time of when the address was created. Can be in the future.
+
+‘affected’ - 1 if extended successfully, 0 if not successful
+
+
+
+Sample client code (PHP):
+
+The following sample code shows how to interact with the API using PHP:
+
+
+
+
+
+require('JSON.php'); // grab your copy from http://mike.teczno.com/json.html or change the code to use the JSON PHP extension if you have it enabled.
+
+
+function api_call($function, $params, $req_type='POST', $decode=true) {
+
+
+        $params['ip'] = $_SERVER['REMOTE_ADDR'];
+
+        $params['agent'] = substr($_SERVER['HTTP_USER_AGENT'], 0, 160);
+
+        $result = null;
+
+   
+
+ 
+
+   
+
+   if (isset($_COOKIE['SUBSCR'])) {
+
+       $toks = explode(':', $_REQUEST['SUBSCR']);
+
+       $hash = array_shift($toks);
+
+       $email_addr = array_shift($toks);
+
+       $email_timestamp = array_shift($toks);
+
+               
+
+       $params['SUBSCR'] = $_COOKIE['SUBSCR'];
+
+       
+
+   }
+
+
+        $req = 'f='.$function;
+
+        foreach ($params as $key => $val) {
+
+       if (is_array($val)) {
+
+           foreach ($val as $ak => $av) {
+
+               $req .= '&'.$key.'%5B%5D='.urlencode($av);
+
+           }
+
+       } else {
+
+           $req .= '&'.$key.'='.urlencode($val);
+
+       }
+
+        }
+
+   
+
+
+        
+
+        $host = 'www.guerrillamail.com';
+
+   
+
+   if (strpos(__FILE__, '/dev')!==false) {
+
+       $resource = '/dev/ajax.php';
+
+   } else {
+
+           $resource = '/ajax.php';
+
+   }
+
+
+//echo '<A href="http://'.$host.$resource.'?'.htmlentities($req).'">'.htmlentities($host.$resource).'?'.htmlentities($req).'</a>';
+
+
+
+        $fp = fsockopen ($host, 80, $errno, $errstr, 10);
+
+        
+
+        
+
+        if ($fp) {
+
+        
+
+
+                if ($req_type=='GET') {
+
+                        $get = $resource.'?'.$req;
+
+                        $send  = "GET $get HTTP/1.0\r\n"; // dont need chunked so use HTTP/1.0
+
+                        $send .= "Host: $host\r\n";
+
+                        $send .= "User-Agent: Guerrilla Mail API (www.guerrillamail.com)\r\n";
+
+                        $send .= "Referer: ".$_SERVER['SERVER_NAME']."\r\n";
+
+                        if (isset($_SESSION['API_SESSION'])) {
+
+                                //$send .= "Cookie: PHPSESSID=".$_SESSION['API_SESSION']."\r\n";
+
+               
+
+                        }
+
+           $send .= "Cookie: PHPSESSID=".session_id()."\r\n";
+
+           
+
+                        $send .= "Content-Type: text/xml\r\n";
+
+                        $send .= "Connection: Close\r\n\r\n";
+
+                } else {
+
+                        // Post the data
+
+                        $send = "POST ".$resource." HTTP/1.0\r\n";
+
+                        $send .= "Host: $host\r\n";
+
+                        $send .= "User-Agent: Guerrilla Mail API (www.guerrillamail.com)\r\n";
+
+                        $send .= "Referer: ".$_SERVER['SERVER_NAME']."\r\n";
+
+                        if (isset($_SESSION['API_SESSION'])) {
+
+                                //$send .= "Cookie: PHPSESSID=".$_SESSION['API_SESSION']."\r\n";
+
+                        }
+
+           $send .= "Cookie: PHPSESSID=".session_id()."\r\n";
+
+           
+
+                        $send .= "Content-Type: application/x-www-form-urlencoded\r\n";
+
+                        $send .= "Content-Length: " . strlen($req) . "\r\n\r\n";
+
+                        $send .= $req; // post the request
+
+                }
+
+       
+
+       //echo $send;
+
+
+                if ($sent = fputs ($fp, $send, strlen($send)))  {  // do the request
+
+
+                        // skip headers... parse cookies
+
+
+                        while (!feof($fp)) { // skip the header
+
+                                $res = fgets ($fp);
+
+                                if (preg_match ('#Set-Cookie: PHPSESSID=(.+?);#', $res, $m)) {
+
+                                        // extracted the PHP session ID
+
+                                        // so that we can maintain a session between the client/server
+
+                                        $_SESSION['API_SESSION'] = $m[1];
+
+                                }
+
+               
+
+               // grab the SUBSCR cookie from the reply and set to the client
+
+                                if (preg_match ('#Set-Cookie: (SUBSCR=.+)#', $res, $m)) {
+
+                                        $data = explode(';', $m[1]);
+
+                                        foreach ($data as $item) {
+
+                                                $pair = explode('=', $item);
+
+                                                if (trim($pair[0])=='expires') {
+
+                                                        // needs to be in a unix timestamp
+
+                                                        $cookie[trim($pair[0])] = strtotime(trim(urldecode($pair[1])));
+
+                                                } else {
+
+                                                        $cookie[trim($pair[0])] = trim(urldecode($pair[1]));
+
+                                                }
+
+                                        }
+
+
+                                        if ($_SERVER['HTTP_HOST']=='localhost') {
+
+                                                $host = $_SERVER['HTTP_HOST'];
+
+                                        } else {
+
+                                                $host = '.'.str_replace('.www', '', $_SERVER['HTTP_HOST']);
+
+                                        }
+
+                                        if (setcookie('SUBSCR', $cookie['SUBSCR'], $cookie['expires'], '/', $host)) { // , $host
+
+                                                //echo 'cookie set';
+
+                                        }
+
+
+                                }
+
+
+                
+
+
+                                if (strcmp($res, "\r\n")===0) break;
+
+                        }
+
+
+                }
+
+        
+
+                $buffer = '';
+
+                if ($sent) {                         
+
+
+                        while(!feof($fp)) {
+
+                                $buffer .= fread($fp, 1024);        
+
+                        }
+
+                        $JSON = new Services_JSON();
+
+                        if ($decode) {
+
+                                $result = $JSON->decode($buffer);
+
+                        } else {
+
+                                $result = $buffer;
+
+                        }
+
+                                                
+
+                }
+
+
+                if ($fp) {
+
+                        fclose($fp);
+
+                }
+
+
+                return $result;
+
+
+        } else {
+
+
+                return null;
+
+        }
+
+
+
+}
+
+
+
+
+
+
+
+
+## latest api: 
+
+
+Guerrilla Mail JSON API
+TODO: document attachment handling
+version 1.6, 24th March, 2015
+- renamed ‘domain’ parameter to ‘site’. The old domain parameter will still work, but in the docs it is referred to as ‘site’ now. You can get the value of site by going to the RYO console -> Setup -> Api
+- the ‘Edit’ tab, which is mentioned here, was renamed to ‘Setup’
+version 1.6, 20th October 2014
+-  del_email changed to return an object, to be consistent with other functions.
+- it’s not mandatory anymore to pass the user agent and ip at each request
+- PRIVATE CUSTOM DOMAINS are back!
+version 1.5, 19th July, 2014
+- added ‘alias’ and ‘alias_error’ to set email_user. Removed all subscriber references
+version 1.4, 3rd September 2013
+- Added ‘domain’ parameter to API calls for custom domain support
+version 1.3, 10th jan 2013
+- deprecated subscription stuff
+- email addresses no-longer expire
+version 1.1, 20th May 2011 
+- updated sample PHP code.
+version 1.5, 30th May 2011
+- Removed the requirement for cookies, added subscr_token and sid_token parameters
+version 1.5.1, 22 Jun 2011
+- Fixed a bug with sid_token, no changes were made  to the API spec.
+
+The latest version of this document is available on Google Docs here: https://docs.google.com/document/d/1Qw5KQP1j57BPTDmms5nspe-QAjNEsNg8cQHpAAycYNM/edit?hl=en - you are welcome to add your discussions to this document
+
+Questions?  flashmob@gmail.com
+
+
+New: Custom Domain Names
+
+You can now use your own custom domain names and use these with the API. A new ‘domain’ parameter has been added to each API call.
+
+To add your domain name to Guerrilla Mai, go to https://grr.la/ryo/guerrillamail.com/ and create yourself an account. Then go to the “Upgrades” tab  to add your domain. Next, take a look at the Setup -> Site, ‘Site Access’ setting. If you set the site to ‘private’, you would need to pass an Authorization Token to access the API. See the Setup tab, and click “API” from the menu on the left for more details about the Authorization Token.
+Introduction
+
+Guerrilla Mail provides a JSON API through HTTP. The API is public and open to all, it does not need registration or API keys to operate. The API is used by GuerrillaMail itself to power the site, so GuerrillaMail.com is actually an example for how to use the API.
+
+The API URL is located at: https://api.guerrillamail.com/ajax.php
+
+Each request to the above URL must have a parameter ‘f’, indicating the function name. It may optionally pass ‘ip’ and ‘agent’ to indicate the IP address and user-agent of the client-end. Followed by the argument(s) as required by the function specification. The result will be returned in a JSON encoded string. 
+
+Example:  https://api.guerrillamail.com/ajax.php?f=get_email_address&ip=127.0.0.1&agent=Mozilla_foo_bar
+
+As a requirement, the client interacting with the API must be able to save, send and receive the following parameters
+
+
+sid_token - A session ID. Set by the server for to maintain state. The client must always look for this parameter with each function return, remember it (if changed), and then provide it as a parameter with each API call. This value can change at every call, and when it changes, it indicates that a new session was started; the client would need to refresh the interface with new data.
+
+
+Note: The API may be rate limited, but we do not publish our rate limits. Please use this API carefully.
+
+Q: Why it’s recommended to send the agent and ip at each request, you ask? A: These can be taken from the HTTP request you say. Well, The ip and agent are passed because these are from the the client-end. In some cases, the API can be accessed by a proxy. For example, guerrillamail.com index.php script uses the API itself. Since index.php is on the server, the API would always get the IP address of the server, and not the end client.
+Update: It’s not mandatory anymore. It’s only recommended when making an API call on behalf of a client.
+
+
+
+Created a guerrilla mail app? Let us know, share it with us https://www.facebook.com/GuerrillaMail
+Flow
+
+1. User accesses the Guerrilla Mail Application. App initializes and calls get_email_address to get the session id (sid_token), email address and email address’ timestamp. The client can get a random email address, or specify the local part of an address that they wish to use.
+
+2. Call to get_email_list (with offset=0) to get the initial page of emails of up to 20 emails. Note that this function needs to be called only when opening the mailbox for the first time as part of initialization, it should not be used for checking email.
+
+3. A call to check_email is made, to check for new email. This could be a function that works in the background.
+
+4. New email arrives, the user clicks on it. Email is fetched and displayed (A call to fetch_email is made)
+
+5. To change the email address - the user can set the email address.  (A call to set_email_user is made). After making a call to this function, the client can fetch the email list for this email by checking the email. Note: When a user changes the email address from one address to another, the old email address and its emails are NOT deleted, if the user changes back to the old address then their messages will still be there until the address expires or the message is 1 hour old.
+
+6. Forget email - tell the server to forget the current email address (but do not delete it) (A call to forget_me is made)
+
+7. Extend time - (deprecated, all email addresses work all the time) Tell the server extend time for the current address (A call to extend is made)
+
+8. Email expired. The client should keep time of when the email expires. Some calls also return a timestamp. The timestamp is a Unix timestamp, indicating when the address was created. The client can calculate how many minutes are remaining:
+
+seconds remaining = 3600 - Current Timestamp - Email Timestamp
+
+
+Note: A session can expire after about 18 minutes of inactivity. If a session expires, a new email address will be generated when making a call to get_email_address , a user can always return to the old email address by making a call to set_email_user
+Authorization
+Guerrilla Mail’s API is public; authorization is not needed unless you have created a site and added a custom domain to it. To create a private site, go to  https://grr.la/ryo/guerrillamail.com/ and create yourself an account. Sites are private by default and you can add as many domains as you want. If the site is set to private, email for custom domains will be accessible only if a valid Authorization token was given in the header. (See the Setup tab, “Site Access” setting to set your site to public if you don’t want to use authorization).
+
+API Key for private sites
+
+If using Authorization, your API Key will be shown in the control panel, under the Setup tab, API page - (keep it secret).
+
+How to authorize for private sites
+With each API call, you’ll need to pass the following HTTP header:
+
+Authorization: ApiToken 9fc104bfc7f71e7e1aef5479eb87ebe81e651432377a60953d82ff0de7b99c2e
+
+ApiToken is a secret value derived from the API key, designed to change for each session. Here is how it’s derived:
+
+1. Call get_email_address to get the sid_token string.
+2. Derive a token by calling a HMAC function, with the following parameters:
+Algorithm: SHA-256, secret: API key, data: sid_token
+For example, in PHP, you would call: 
+$token = hash_hmac('sha256', $sid_token, $api_key);
+Finally, the the token is sent through the API by specifying an 'Authorization' HTTP header.
+
+For example, in PHP
+1. We take an API token, eg. qqXvbMBcZ2e2nniU
+2. We make an initial API call get_email_address and get the sid_token of 'b2idl836kj1a106lo34a47el12'
+3. We would derive the ApiToken like this:
+$token = hash_hmac('sha256', $sid_token, $api_key); which gives us: 9fc104bfc7f71e7e1aef5479eb87ebe81e651432377a60953d82ff0de7b99c2e
+
+When using authorization, the ‘site’ parameter should also be passed with each API call.
+
+Authorization Result
+Every time a request is made with an Authorization header, the ‘auth’ object will be added to any resulting object
+
+auth: 
+{
+success:true, 
+error_codes:[]
+}
+
+Success is boolean. If true, then the error_codes array will be empty. Possible error codes are:
+
+array(
+    'auth-token-missing' => 'Missing authentication token in the header',
+    'auth-token-invalid' => 'Invalid authentication token.',
+    'auth-unknown-site' => 'Invalid site used.',
+    'auth-session-not-initialized' => 'Session not initialized. Please call get_email_address first to grab the session token',
+    'auth-api-key-unconfigured' => 'api key for site not generated'
+)
+
+
+
+Functions
+Each HTTP request to https://api.guerrillamail.com/ajax.php is considered a function call. The client could use GET when querying for data, and POST when setting or deleting data, although this is not strictly enforced. Each request must contain the ‘f’ parameter containing the function name.
+Function
+get_email_address
+
+Arguments
+
+‘lang’ - a string representing the language code. Currently supported: en, fr, nl, ru, tr, uk, ar, ko, jp, zh, zh-hant, de, es, it, pt
+
+
+‘sid_token’ [optional] - The session id token used to maintain state. The API will also check a cookie named PHPSESSID for this token if it was not passed as an argument.
+
+
+‘site’ [optional] - If you have your own domain and would like to access your custom domains, use this site identifier for your site. Defaults to guerrillamail.com (See RYO -> Setup -> API page for details) 
+
+Description
+
+The function is used to initialize a session and set the client with an email address. If the session already exists, then it will return the email address details of the existing session. If a new session needs to be created, then it will create new email address randomly. The function will return a number of arguments for the client to remember, including the ‘sid_token’. The ‘sid_token’ is passed to each subsequent API call to maintain state.
+
+Alternative method for keeping track of the session:
+
+The session can be also maintained using HTTP Cookies. The cookie name is ‘PHPSESSID’, and it will be given in the resulting HTTP header. The client can store this cookie and send it whenever making an API call. A new session will be created when the ‘PHPSESSID’ cookie is not given by the client. The function also generates a new welcome email for the user.
+
+To send ‘PHPSESSID’ in a HTTP request, add the following line to the header:
+
+Cookie: PHPSESSID=ABC1234\r\n";
+
+Where ‘ABC1234’ is the data for the ‘PHPSESSID’ cookie.
+
+The client should always watch the ‘PHPSESSID’ cookie for changes. If it changes, it needs to update this value, and pass it in subsequent calls.
+
+
+Returns
+
+An object with the following properties:
+
+‘email_addr’ - The email address that that was determined. If a previous session was found, then it will be the email address of that session. A new random email address will be created.
+
+‘email_timestamp’ - a UNIX timestamp when the email address was created. Used by the client to keep track of expiry.
+
+‘sid_token’ - Session ID token. You would need to supply this parameter to every subsequent API call
+
+Example
+https://api.guerrillamail.com/ajax.php?f=get_email_address&lang=en&site=guerrillamail.com&ip=127.0.0.1&agent=Mozilla_foo_bar
+
+{  
+   "email_addr":"test@guerrillamailblock.com",
+   "email_timestamp":1405770047,
+   "alias":"ocwvc+3u1xuck",
+   "alias_error":"",
+   "sid_token":"lmmb0hfqa6qjoduvr2vdenas62"
+}
+Function
+
+set_email_user
+
+Arguments
+
+‘email_user’ - String, 74 chars max. The ‘local part’ of an email address. example: test@guerrillamailblock.com, the email_user part would be ‘test’
+
+‘lang’ - String. The language code, eg. ‘en’.
+
+
+‘sid_token’ - Pass this to maintain state, the value for this argument is returned after calling get_email_address
+
+Note: You don’t need to pass the PHPSESSID cookie if you pass the ‘sid_token’ argument
+
+
+‘site’ [optional] -  If you have your own domain and would like to access your custom domains, use this site identifier for your site. Defaults to guerrillamail.com (See RYO -> Setup -> API page for details) 
+
+
+
+
+Description
+
+Set the email address to a different email address.. If the email has already been set, it will be given additional 60 minutes. Otherwise, a new email address will be generated if the email address is not in the database.
+
+Returns
+
+Similar to get_email_address, this function returns an object with the following properties:
+
+‘email_addr’ - The email address that that was set. 
+
+‘email_timestamp’ - a UNIX timestamp when the email address was created. Used by the client to keep track of expiry.
+
+‘sid_token’ - Session ID token
+
+
+‘site’ - (string) The identifier of the site matched
+
+
+‘site_id’ - (int) The ID of the site which the domain belongs to
+
+
+‘alias’ - (string) This is the scrambled version of email_addr, eg “fcs5d3+vgdtknvsyt4”. The scrambled address is an alias for email_addr, so all email going to alias will arrive at the inbox of email_addr. Scrambled addresses are used to mask the email_addr, so it is difficult for someone else to know which email_addr was used.
+
+
+‘alias_error’ (string) Error message if the alias could not be set
+Example
+https://api.guerrillamail.com/ajax.php?f=set_email_user&email_user=test&site=guerrillamail.com&lang=en&sid_token=lmmb0hfqa6qjoduvr2vdenas62 
+{  
+   "d":"guerrillamail.com",
+   "alias":"ocwvc+3u1xuck",
+   "email_addr":"test@guerrillamailblock.com",
+   "email_timestamp":1405770047,
+   "site_id":"1",
+   "site":"guerrillamail.com",
+   "sid_token":"lmmb0hfqa6qjoduvr2vdenas62"
+}
+Function
+check_email
+
+Arguments
+
+‘sid_token’ - [required] Session ID token returned from get_email_address
+
+
+seq - [required] The sequence number (id) of the oldest email
+
+
+Description
+
+Check for new email on the server. Returns a list of the newest messages. The maximum size of the list is 20 items.
+
+The client should not check email too many times as to not overload the server. Do not check if the email expired, the email checking routing should pause if the email expired.
+
+Returns
+
+An an object with the following properties:
+
+‘list’ - A list of messages, represented as an array of objects. Each object has the following properties: 
+	‘mail_id’, 
+‘mail_from’ (email address of sender), 
+‘mail_subject’, 
+‘mail_excerpt’ (snippet from the email), 
+‘mail_timestamp’ (a UNIX timestamp), 
+‘mail_read’ (1 if read, 0 if not), 
+ 	‘mail_date’
+
+Note: ‘mail_subject’ and ‘mail_excerpt’ are escaped using HTML Entities.
+
+‘count’ - The number of emails matched. This can be much more than the maximum that can be returned (20)! This number indicates the total number of new emails in the database. (If you want to get the emails after the first 20, then make another call with the get_older_list function
+
+
+‘email’ - The email address which the list is for. Eg. test@guerrillamailblock.com The client would need to watch this variable to detect any changes to sync the address.
+‘ts’ - The timestamp of the email address, time of when the email address was created. The client can use this variable to sync the time. Emails expire after 60 minutes
+‘sid_token’ - Session ID token
+‘users’ - the number of users viewing this inbox (not exact)
+
+Example
+https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=lmmb0hfqa6qjoduvr2vdenas62 
+
+{  
+   "list":[  
+      {  
+         "mail_id":"23518194",
+         "mail_from":"info@brahminmatrimony.com",
+         "mail_subject":"Ravi Shastri, You have 50 potential matches",
+         "mail_excerpt":"You have not viewed these profiles in detail.\n\n\t\t\t",
+         "mail_timestamp":"1423958802",
+         "mail_read":"0",
+         "mail_date":"00:06:42",
+         "att":"0"
+      },
+      
+   ],
+   "count":"1",
+   "email":"test@guerrillamailblock.com",
+   "alias":"sjyj+wok",
+   "ts":1423958978,
+   "sid_token":"jogbasvjjes145uej10hv70v67",
+   "stats":{  
+      "sequence_mail":"17,565,633",
+      "created_addresses":38163242,
+      "received_emails":"2,042,858,167",
+      "total":"2,025,292,534",
+      "total_per_hour":"69924"
+   },
+   "auth":{  
+      "success":true,
+      "error_codes":[  
+
+      ]
+   }
+}
+
+Function
+
+get_email_list
+
+Arguments
+
+‘sid_token’ - [required] Session ID token returned from get_email_address
+
+
+‘offset’ - [required] How many emails to start from (skip). Starts from 0
+
+‘seq’ - [optional] The sequence number(id) of the first email
+
+Description
+
+Gets a maximum of 20 messages from the specified offset. Offset of 0 will fetch a list of the first 10 emails, offset of 10 will fetch a list of the next 10, and so on. 
+
+This function is useful for populating the initial email list, if you want to check for new mail use check_mail. Note: When returned, subject and email excerpt are escaped using HTML Entities.
+
+Returns
+Identical to check_email described above
+
+Example
+Note: in this example below, sid_token is omitted from the URL, instead, your browser will automatically send the cookie. You’ll need to add sid_token parameter.
+
+https://api.guerrillamail.com/ajax.php?f=get_email_list&offset=0&sid_token=lmmb0hfqa6qjoduvr2vdenas62 
+
+
+{
+             "alias" : "sjyj+wok",
+             "auth" :
+                {
+                    "error_codes" : [  ],
+                    "success" : true
+                },
+             "count" : "1",
+             "email" : "test@guerrillamailblock.com",
+             "list" : [
+                 {
+                 "att" : "0",
+                 "mail_date" : "00:11:45",
+                 "mail_excerpt" : "Aloha from beautiful Hawai`i ...\r\n\r\nThis awesome new system pulls in traffic, leads and\r\nexclusive opt-in subscribers off the Internet like a\r\nten-ton magnet and EXPLODES your OWN contact list ...\r\n\r\n",
+                 "mail_from" : "bounce1@worldlargestsafelist.com",
+                 "mail_id" : "23518264",
+                 "mail_read" : "0",
+                 "mail_subject" : "MULTIPLY Your Traffic, Leads & Subscribers to INFINITY!",
+                 "mail_timestamp" : "1423959105"
+                 }
+             ],
+             "sid_token" : "jogbasvjjes145uej10hv70v67",
+             "stats" :
+             {
+                 "created_addresses" : 38163242,
+                 "received_emails" : "2,042,864,357",
+                 "sequence_mail" : "17,565,720",
+                 "total" : "2,025,298,637",
+                 "total_per_hour" : "65512"
+             }
+         }
+
+
+
+
+Function
+
+fetch_email
+
+Arguments
+
+‘sid_token’ - Session ID token returned from get_email_address
+
+
+email_id - The id of the email to fetch
+
+Description
+
+Get the contents of an email. 
+
+Notes: 
+- All HTML in the body of the email is filtered. Eg, Javascript, applets, iframes, etc is removed.
+- All images in the email are relative to https://www.guerrillamail.com/res.php - this script will generate a ‘blocked by GM’ image, indicating that the image was blocked. The CGI parameters for this script are as follows:
+	r = Is it a resource? 1 if true. Always 1
+	n= Node. The HTML element type. Can be a string of letters (a-z)
+	q= The query string for the original image. This is URL Encoded
+	Example URL: https://www.guerrillamail.com/res.php?r=1&n=img&q=http%3A%2F%2Fstatic.groupon.de%2Fnewsletter_ums%2Flogo_groupon_de_DE.gif
+	When an email is displayed by the client, it should displayed the blocked images generated by res.php. When a ‘Display Images’ button is clicked, the client should use a regular expression to replace the links to res.php with the links to the image found in the ‘q’ parameter. Here is an example of this regular expression in the Javascript client:
+
+// Javascript example: This will replace all the res.php links inside double quotes with the URL stored in the q parameter. Since the URL in the q parameter is URL Escaped, we need to define an anonymous function to unescape the matched parameter. The ‘g’ flag tells the regex engine to replace all occurrences in the string.
+
+temp_html = temp_html.replace(/"\/res\.php\?r=1&amp;n=[a-z]+&amp;q=([^"^&]+)"/g, function(str, p1, offset, s) {return unescape (p1); } );
+       // Sometimes the link can be enclosed inside html encoded quotes, &quot;
+temp_html = temp_html.replace(/&quot;\/res\.php\?r=1&amp;n=[a-z]+&amp;q=([^"]+)&quot;/g, function(str, p1, offset, s) {return "&quot;"+unescape(p1)+"&quot;" ; } ); 
+
+Here is the above example written as PHP code (using the ‘e’ modifier allows us to call the urldecode function on the matched parameter):
+
+$source = preg_replace ('#"/res\.php\?r=1&amp;n=img&amp;q=([^"]+)"#e', "urldecode('\\1')", $source);
+
+$source = preg_replace ('#&quot;/res\.php\?r=1&amp;n=img&amp;q=([^"]+)&quot;#e', "urldecode('\\1')", $source);
+
+
+- Subject and email excerpt are escaped using HTML Entities.
+- Only emails owned by the current session id can be fetched.
+
+Returns
+
+Returns false if not found, or an array with the following properties:
+
+mail_id - an integer
+mail_from - email address of sender
+mail_recipient - email address of receiver
+mail_subject - UTF-8 encoded string of the email’s subject
+mail_excerpt - a short excerpt of the email
+mail_body - The message part of the email. May contain filtered HTML as described above
+mail_timestamp - unix timestamp of arrival
+mail_date - Date of arrival in the following format if less than 24 hours: H:M:S, or Y-M-D if older than 24
+mail_read - 0 or 1 indicating if email was fetched before
+content_type - MIME type for the mail_body, can be text/plain or text/html
+‘sid_token’ - Session ID token
+
+
+Function
+forget_me
+Arguments
+‘sid_token’ - [required] Session ID token returned from get_email_address
+‘email_addr’ - the email address to forget. The email_addr should be the same value as returned by set_email_user or get_email_address
+Description
+Forget the current email address. This will not stop the session, the existing session will be maintained. A subsequent call to get_email_address will fetch a new email address or the client can call set_email_user to set a new address. Typically, a user would want to set a new address manually after clicking the ‘forget me’ button.
+
+Returns
+True if successful. 
+
+
+Function 
+del_email
+Arguments
+‘sid_token’ - Session ID token returned from get_email_address
+
+
+email_ids - array or an integer, in the following format: email_ids[]=425&email_ids[]=426&email_ids[]=427
+
+Where 425, 426 and 427 are the ids of emails to delete. In a HTTP request, this parameter would be encoded like this:
+email_ids%5B%5D=425&email_ids%5B%5D=426&email_ids%5B%5D=427
+
+(See example PHP code below for how the string is generated. Another example here http://snipplr.com/view/4444/passing-an-array-through-get-request/)
+
+Description
+Delete the emails from the server
+
+	Returns
+An array of deleted email ids
+An object with the following property:
+deleted_ids - an array of deleted email ids
+
+Function
+get_older_list
+Arguments
+‘sid_token’ - Session ID token returned from get_email_address
+
+
+‘seq’ - Integer. get emails that have a lower id than the ‘seq’
+
+
+‘limit’ - Integer how many emails to fetch max.
+Description
+The idea of this function is to get some emails that are older (lower ID) than ‘seq’. How can this be useful? Say we have more than 1 page of emails. Then, we delete some emails from the first page, so we are left with some empty slots at the bottom. Instead of calling fetch_email_list, we call this to be more efficient and get exactly the number of email we need to fill.
+
+	Returns
+Same structure as returned by fetch_email_list
+
+
+
+
+API Implementations
+Here are some 3rd party implementations of the API.
+
+PHP - https://github.com/taion809/GuerrillaMail / https://packagist.org/packages/johnsn/guerrillamail
+
+C# - http://www.nuget.org/packages/GuerrillaMail/1.0.8
+
+JS / Coffee Script - https://www.npmjs.org/package/guerrillamail / https://github.com/znetstar/guerrillamail 
+
+also, Coffee Script - https://github.com/rjferguson21/node-guerrilla 
+
+Python - https://github.com/ncjones/python-guerrillamail 
+
+Java - https://github.com/DavidePastore/JGuerrillaMail 
+
+Ruby - https://github.com/saluzafa/guerrilla_mail-ruby 
+
+Groovy - https://github.com/david-w-millar/gmclient 
+
+Object Pascal https://gist.github.com/EpicJhon/adf9ab7599abaa4b0467
+
+
+
+
+Sample client code (PHP):
+
+The following sample code shows how to interact with the API using PHP:
+
+
+
+
+<?php
+
+require('JSON.php'); // grab your copy from http://mike.teczno.com/json.html or change the code to use the JSON PHP extension if you have it enabled.
+
+session_start(); // required to maintain session state. This generates a session ID which is sent to guerrilla mail as a cookie named 'PHPSESSID'. Note that if you plan to use php and then javascript ajax on the same page, you should call session_write_close()
+
+function api_call($function, $params, $req_type='POST', $decode=true) {
+
+	$params['ip'] = $_SERVER['REMOTE_ADDR'];
+	$params['agent'] = substr($_SERVER['HTTP_USER_AGENT'], 0, 160); 
+	$result = null;
+
+	$req = 'f='.$function;
+	foreach ($params as $key => $val) {
+        if (is_array($val)) {
+            foreach ($val as $ak => $av) {
+                $req .= '&'.$key.'%5B%5D='.urlencode($av);
+            }
+        } else {
+            $req .= '&'.$key.'='.urlencode($val);
+        }
+	}
+    
+
+	
+	$host = 'www.guerrillamail.com';
+    
+    if (strpos(__FILE__, '/dev')!==false) {
+        $resource = '/dev/ajax.php';
+    } else {
+	   $resource = '/ajax.php';
+    }
+
+
+
+	$fp = fsockopen ($host, 80, $errno, $errstr, 10);
+	
+	
+	if ($fp) {
+	
+
+		if ($req_type=='GET') {
+			$get = $resource.'?'.$req;
+			$send  = "GET $get HTTP/1.0\r\n"; // dont need chunked so use HTTP/1.0
+			$send .= "Host: $host\r\n";
+			$send .= "User-Agent: Guerrilla Mail API (www.guerrillamail.com)\r\n";
+			$send .= "Referer: ".$_SERVER['SERVER_NAME']."\r\n";
+			$send .= "Cookie: PHPSESSID=".session_id()."\r\n";
+            
+			$send .= "Content-Type: text/xml\r\n";
+			$send .= "Connection: Close\r\n\r\n"; 
+		} else {
+			// Post the data
+			$send = "POST ".$resource." HTTP/1.0\r\n";
+			$send .= "Host: $host\r\n";
+			$send .= "User-Agent: Guerrilla Mail API (www.guerrillamail.com)\r\n";
+			$send .= "Referer: ".$_SERVER['SERVER_NAME']."\r\n";
+
+            			$send .= "Cookie: PHPSESSID=".session_id()."\r\n";
+            
+			$send .= "Content-Type: application/x-www-form-urlencoded\r\n";
+			$send .= "Content-Length: " . strlen($req) . "\r\n\r\n";
+			$send .= $req; // post the request
+		}
+        
+        //echo $send;
+
+		if ($sent = fputs ($fp, $send, strlen($send)))  {  // do the request
+
+			// skip headers... parse cookies
+
+			while (!feof($fp)) { // skip the header
+				$res = fgets ($fp);
+				if (preg_match ('#Set-Cookie: PHPSESSID=(.+?);#', $res, $m)) {
+					// extracted the PHP session ID
+					// so that we can maintain a session between the client/server
+					$_SESSION['API_SESSION'] = $m[1]; 
+				}
+                
+                
+		
+
+				if (strcmp($res, "\r\n")===0) break;
+			}
+
+		}
+	
+		$buffer = '';
+		if ($sent) { 			
+
+			while(!feof($fp)) {
+				$buffer .= fread($fp, 1024);	
+			}
+			$JSON = new Services_JSON();
+			if ($decode) {
+				$result = $JSON->decode($buffer);
+			} else {
+				$result = $buffer;
+			}
+						
+		}
+
+		if ($fp) {
+			fclose($fp);
+		}
+
+		return $result;
+
+	} else {
+
+		return null;
+	}
+
+
+}
+
+// example calls:
+
+$account = api_call('get_email_address', array('lang'=>'en'));
+print_r($account);
+
+
+$inbox = api_call('get_email_list',array('offset'=>0));
+print_r($inbox);
+
+
+
+EOF
+
+
+
+

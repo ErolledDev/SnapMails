@@ -5,7 +5,6 @@ import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
 import compression from 'vite-plugin-compression';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 
 // Generate static HTML files for each route
 const generateStaticFiles = () => {
@@ -37,19 +36,7 @@ const generateSitemap = () => {
       url: '/',
       priority: '1.0',
       changefreq: 'daily',
-      lastmod: currentDate,
-      images: [
-        {
-          loc: `${baseUrl}/og-image.jpg`,
-          title: 'SnapMails - Secure & Customizable Disposable Email Service',
-          caption: 'SnapMails homepage preview'
-        },
-        {
-          loc: `${baseUrl}/desktop-view.jpg`,
-          title: 'SnapMails Desktop Interface',
-          caption: 'SnapMails application interface on desktop'
-        }
-      ]
+      lastmod: currentDate
     },
     { 
       url: '/features',
@@ -84,23 +71,12 @@ const generateSitemap = () => {
   ];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd
-        http://www.google.com/schemas/sitemap-image/1.1
-        http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${pages.map(page => `  <url>
     <loc>${baseUrl}${page.url}</loc>
     <lastmod>${page.lastmod}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>${page.images ? `
-${page.images.map(img => `    <image:image>
-      <image:loc>${img.loc}</image:loc>
-      <image:title>${img.title}</image:title>
-      <image:caption>${img.caption}</image:caption>
-    </image:image>`).join('\n')}` : ''}
+    <priority>${page.priority}</priority>
   </url>`).join('\n')}
 </urlset>`;
 
@@ -129,28 +105,7 @@ Disallow: /.env.*
 Crawl-delay: 10
 
 # Sitemap location
-Sitemap: https://snapmails.xyz/sitemap.xml
-
-# Additional rules for specific bots
-User-agent: GPTBot
-Disallow: /
-
-User-agent: ChatGPT-User
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-# Block archive.org bot
-User-agent: ia_archiver
-Disallow: /
-
-# Block potentially harmful bots
-User-agent: Baiduspider
-Disallow: /
-
-User-agent: PetalBot
-Disallow: /`;
+Sitemap: https://snapmails.xyz/sitemap.xml`;
 
   fs.writeFileSync('dist/robots.txt', robotsTxt);
 };
@@ -199,17 +154,6 @@ export default defineConfig({
               },
               networkTimeoutSeconds: 10
             }
-          },
-          {
-            urlPattern: /^https:\/\/images\.unsplash\.com/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'image-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 24 * 60 * 60 // 24 hours
-              }
-            }
           }
         ],
         skipWaiting: true,
@@ -246,39 +190,15 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/guerrillamail/, ''),
         configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq, req) => {
+          proxy.on('proxyReq', (proxyReq) => {
             proxyReq.setHeader('Accept', 'application/json');
+            proxyReq.setHeader('Content-Type', 'application/json');
             proxyReq.setHeader('Cache-Control', 'no-cache');
             proxyReq.setHeader('Origin', 'https://snapmails.xyz');
           });
         }
       }
-    },
-    headers: {
-      'Cache-Control': 'public, max-age=31536000',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-      'Content-Security-Policy': "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; script-src-elem 'self' 'unsafe-inline' blob: https:; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self';"
-    },
-    compression: true,
-    hmr: {
-      overlay: true
     }
-  },
-  preview: {
-    headers: {
-      'Cache-Control': 'public, max-age=31536000',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-      'Content-Security-Policy': "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; script-src-elem 'self' 'unsafe-inline' blob: https:; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self';"
-    },
-    compression: true
   },
   build: {
     rollupOptions: {
@@ -292,31 +212,11 @@ export default defineConfig({
           privacy: ['./src/pages/Privacy.tsx'],
           terms: ['./src/pages/Terms.tsx'],
           faq: ['./src/pages/FAQ.tsx']
-        },
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]'
+        }
       }
     },
     target: 'esnext',
     minify: 'esbuild',
-    cssMinify: true,
-    reportCompressedSize: false,
-    chunkSizeWarningLimit: 1000,
-    assetsInlineLimit: 4096,
-    sourcemap: process.env.NODE_ENV === 'development',
-    cssCodeSplit: true,
-    modulePreload: {
-      polyfill: true
-    },
-    cache: true
-  },
-  esbuild: {
-    legalComments: 'none',
-    treeShaking: true,
-    minifyIdentifiers: true,
-    minifySyntax: true,
-    minifyWhitespace: true,
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
+    sourcemap: false
   }
 });
