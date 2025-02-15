@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SnapMails Blog</title>
+    <link>https://snapmails.xyz/blog</link>
+    <description>Latest news, tips, and updates about temporary email services and online privacy</description>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 15 Mar 2025 12:00:00 GMT</lastBuildDate>
+    <atom:link href="https://snapmails.xyz/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    
+    <item>
+      <title>How to Protect Your Privacy Online with Temporary Emails</title>
+      <link>https://snapmails.xyz/blog/protect-privacy-with-temp-mail</link>
+      <guid>https://snapmails.xyz/blog/protect-privacy-with-temp-mail</guid>
+      <pubDate>Wed, 15 Mar 2025 12:00:00 GMT</pubDate>
+      <description>Learn how temporary email services can help protect your online privacy and keep your inbox spam-free.</description>
+    </item>
+    
+    <item>
+      <title>5 Ways to Use Disposable Email Addresses Effectively</title>
+      <link>https://snapmails.xyz/blog/effective-temp-mail-usage</link>
+      <guid>https://snapmails.xyz/blog/effective-temp-mail-usage</guid>
+      <pubDate>Wed, 14 Mar 2025 12:00:00 GMT</pubDate>
+      <description>Discover the best practices for using temporary email services to maximize your online security.</description>
+    </item>
+    
+    <item>
+      <title>Understanding Email Privacy: A Complete Guide</title>
+      <link>https://snapmails.xyz/blog/email-privacy-guide</link>
+      <guid>https://snapmails.xyz/blog/email-privacy-guide</guid>
+      <pubDate>Wed, 13 Mar 2025 12:00:00 GMT</pubDate>
+      <description>A comprehensive guide to email privacy and security in the digital age.</description>
+    </item>
+  </channel>
+</rss>
