@@ -31,11 +31,14 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Content-Security-Policy = """
       default-src 'self' https:; 
-      script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; 
       style-src 'self' 'unsafe-inline'; 
       img-src 'self' https: data:; 
       font-src 'self' data:; 
       connect-src 'self' https: api.guerrillamail.com *.guerrillamail.com;
       worker-src 'self' blob:;
-      manifest-src 'self'
+      manifest-src 'self';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none'
     """
