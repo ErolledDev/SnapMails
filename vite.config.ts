@@ -27,27 +27,80 @@ const generateStaticFiles = () => {
   });
 };
 
-// Generate sitemap.xml with current date
+// Generate sitemap.xml with enhanced metadata
 const generateSitemap = () => {
   const baseUrl = 'https://snapmails.xyz';
-  const currentDate = new Date().toISOString().split('T')[0];
+  const currentDate = new Date().toISOString();
   
   const pages = [
-    { url: '/', priority: '1.0', changefreq: 'daily' },
-    { url: '/features', priority: '0.8', changefreq: 'weekly' },
-    { url: '/about', priority: '0.7', changefreq: 'monthly' },
-    { url: '/privacy', priority: '0.6', changefreq: 'monthly' },
-    { url: '/terms', priority: '0.6', changefreq: 'monthly' },
-    { url: '/faq', priority: '0.7', changefreq: 'weekly' }
+    { 
+      url: '/',
+      priority: '1.0',
+      changefreq: 'daily',
+      lastmod: currentDate,
+      images: [
+        {
+          loc: `${baseUrl}/og-image.jpg`,
+          title: 'SnapMails - Secure & Customizable Disposable Email Service',
+          caption: 'SnapMails homepage preview'
+        },
+        {
+          loc: `${baseUrl}/desktop-view.jpg`,
+          title: 'SnapMails Desktop Interface',
+          caption: 'SnapMails application interface on desktop'
+        }
+      ]
+    },
+    { 
+      url: '/features',
+      priority: '0.9',
+      changefreq: 'weekly',
+      lastmod: currentDate
+    },
+    { 
+      url: '/about',
+      priority: '0.8',
+      changefreq: 'monthly',
+      lastmod: currentDate
+    },
+    { 
+      url: '/privacy',
+      priority: '0.7',
+      changefreq: 'monthly',
+      lastmod: currentDate
+    },
+    { 
+      url: '/terms',
+      priority: '0.7',
+      changefreq: 'monthly',
+      lastmod: currentDate
+    },
+    { 
+      url: '/faq',
+      priority: '0.8',
+      changefreq: 'weekly',
+      lastmod: currentDate
+    }
   ];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd
+        http://www.google.com/schemas/sitemap-image/1.1
+        http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd">
 ${pages.map(page => `  <url>
     <loc>${baseUrl}${page.url}</loc>
-    <lastmod>${currentDate}</lastmod>
+    <lastmod>${page.lastmod}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
+    <priority>${page.priority}</priority>${page.images ? `
+${page.images.map(img => `    <image:image>
+      <image:loc>${img.loc}</image:loc>
+      <image:title>${img.title}</image:title>
+      <image:caption>${img.caption}</image:caption>
+    </image:image>`).join('\n')}` : ''}
   </url>`).join('\n')}
 </urlset>`;
 
@@ -194,7 +247,6 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/guerrillamail/, ''),
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq, req) => {
-            // Add required headers
             proxyReq.setHeader('Accept', 'application/json');
             proxyReq.setHeader('Cache-Control', 'no-cache');
             proxyReq.setHeader('Origin', 'https://snapmails.xyz');
@@ -209,7 +261,7 @@ export default defineConfig({
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; script-src-elem 'self' 'unsafe-inline' blob: https:; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self';"
+      'Content-Security-Policy': "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; script-src-elem 'self' 'unsafe-inline' blob: https:; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self';"
     },
     compression: true,
     hmr: {
@@ -224,7 +276,7 @@ export default defineConfig({
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; script-src-elem 'self' 'unsafe-inline' blob: https:; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self';"
+      'Content-Security-Policy': "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https:; script-src-elem 'self' 'unsafe-inline' blob: https:; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self';"
     },
     compression: true
   },

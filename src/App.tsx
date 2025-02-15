@@ -65,7 +65,7 @@ const Home: React.FC = () => {
           <div className="text-center max-w-4xl mx-auto px-4 pt-16 pb-12">
             <div>
               <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-blue-700 dark:from-blue-400 dark:to-blue-300">
-                Your Privacy Matters
+                Your Privacy Matters!
               </h1>
               <p className="text-2xl font-medium text-gray-800 dark:text-gray-100 max-w-2xl mx-auto mb-6 leading-relaxed">
                 Instant, Secure, and Customizable Temporary Email Service

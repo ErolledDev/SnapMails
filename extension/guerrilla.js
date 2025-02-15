@@ -1,57 +1,21 @@
 // Guerrilla Mail API Client
-const API_BASE = '/api/guerrillamail';
-
-interface EmailAddress {
-  email_addr: string;
-  email_timestamp: number;
-  sid_token: string;
-  alias: string;
-  alias_error: string;
-}
-
-interface Email {
-  mail_id: string;
-  mail_from: string;
-  mail_subject: string;
-  mail_excerpt: string;
-  mail_timestamp: string;
-  mail_read: string;
-  mail_date: string;
-  att: string;
-}
-
-interface EmailList {
-  list: Email[];
-  count: string;
-  email: string;
-  alias: string;
-  ts: number;
-  sid_token: string;
-}
-
-interface EmailContent extends Email {
-  mail_body: string;
-  mail_recipient: string;
-  content_type: string;
-}
+const API_BASE = 'https://api.guerrillamail.com/ajax.php';
 
 export class GuerrillaClient {
-  private sidToken: string | null = null;
-  private lastRequestTime = 0;
-  private readonly RATE_LIMIT_DELAY = 1000;
-  private readonly REQUEST_TIMEOUT = 30000;
-  private readonly MAX_RETRIES = 3;
-  private readonly RETRY_DELAY = 1000;
+  constructor() {
+    this.sidToken = null;
+    this.lastRequestTime = 0;
+    this.RATE_LIMIT_DELAY = 1000;
+    this.REQUEST_TIMEOUT = 30000;
+    this.MAX_RETRIES = 3;
+    this.RETRY_DELAY = 1000;
+  }
 
-  private async delay(ms: number): Promise<void> {
+  async delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  private async makeRequest<T>(
-    endpoint: string, 
-    params: Record<string, string> = {},
-    retryCount = 0
-  ): Promise<T> {
+  async makeRequest(endpoint, params = {}, retryCount = 0) {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
     if (timeSinceLastRequest < this.RATE_LIMIT_DELAY) {
@@ -114,48 +78,30 @@ export class GuerrillaClient {
     }
   }
 
-  async getEmailAddress(lang = 'en'): Promise<EmailAddress> {
-    return await this.makeRequest<EmailAddress>('get_email_address', { lang });
+  async getEmailAddress(lang = 'en') {
+    return await this.makeRequest('get_email_address', { lang });
   }
 
-  async setEmailUser(emailUser: string, lang = 'en'): Promise<EmailAddress> {
-    return await this.makeRequest<EmailAddress>('set_email_user', { 
+  async setEmailUser(emailUser, lang = 'en') {
+    return await this.makeRequest('set_email_user', { 
       email_user: emailUser,
       lang 
     });
   }
 
-  async checkEmail(seq = '0'): Promise<EmailList> {
-    return await this.makeRequest<EmailList>('check_email', { seq });
+  async checkEmail(seq = '0') {
+    return await this.makeRequest('check_email', { seq });
   }
 
-  async getEmailList(offset = '0', seq = '0'): Promise<EmailList> {
-    return await this.makeRequest<EmailList>('get_email_list', { offset, seq });
+  async fetchEmail(emailId) {
+    return await this.makeRequest('fetch_email', { email_id: emailId });
   }
 
-  async fetchEmail(emailId: string): Promise<EmailContent> {
-    return await this.makeRequest<EmailContent>('fetch_email', { email_id: emailId });
-  }
-
-  async forgetMe(emailAddr: string): Promise<EmailAddress> {
-    const response = await this.makeRequest<EmailAddress>('forget_me', { email_addr: emailAddr });
-    this.sidToken = null;
-    return response;
-  }
-
-  async deleteEmail(emailIds: string[]): Promise<{ deleted_ids: string[] }> {
-    const params: Record<string, string> = {};
-    emailIds.forEach((id, index) => {
-      params[`email_ids[${index}]`] = id;
-    });
-    return await this.makeRequest('del_email', params);
-  }
-
-  generateEmailUser(): string {
+  generateEmailUser() {
     const adjectives = ['happy', 'clever', 'brave', 'bright', 'calm', 'eager', 'fair', 'kind'];
     const nouns = ['tiger', 'eagle', 'wolf', 'bear', 'lion', 'hawk', 'deer', 'fox'];
     
-    const getRandomElement = (arr: string[]) => {
+    const getRandomElement = (arr) => {
       const randomValues = new Uint32Array(1);
       window.crypto.getRandomValues(randomValues);
       return arr[randomValues[0] % arr.length];

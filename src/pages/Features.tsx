@@ -50,9 +50,9 @@ export default function Features() {
     <>
       <Helmet>
         <title>Features - Temp Mail - Free Disposable Temporary Email | Spam-Free Temp Mail</title>
-        <meta name="description" content="Explore SnapMails' powerful features: instant email generation, custom addresses, 500+ domains, real-time inbox, and more. Free temporary email service with no registration required." />
-        <meta property="og:title" content="Features - SnapMails Free Temp Mail | Secure Disposable Email Service" />
-        <meta property="og:description" content="Explore SnapMails' powerful features: instant email generation, custom addresses, 500+ domains, real-time inbox, and more. Free temporary email service with no registration required." />
+        <meta name="description" content="Disposable email addresses instantly. Protect your privacy with SnapMails' free temporary email service. No registration, instant inbox access, and automatic deletion for maximum security. Perfect for avoiding spam, testing services, and protecting your real email." />
+        <meta property="og:title" content="Features - Temp Mail - Free Disposable Temporary Email | Spam-Free Temp Mail" />
+        <meta property="og:description" content="Disposable email addresses instantly. Protect your privacy with SnapMails' free temporary email service. No registration, instant inbox access, and automatic deletion for maximum security. Perfect for avoiding spam, testing services, and protecting your real email." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://snapmails.xyz/features" />
         <link rel="canonical" href="https://snapmails.xyz/features" />

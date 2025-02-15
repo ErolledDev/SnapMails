@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "SnapMails - Temporary Email",
+  "version": "1.0.0",
+  "description": "Secure & Customizable Disposable Email Service",
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon-16.png",
+      "32": "icon-32.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://api.guerrillamail.com/*"
+  ]
+}
