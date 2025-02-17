@@ -1,4 +1,4 @@
-![SnapMails - Temporary disposable Email](https://raw.githubusercontent.com/ErolledDev/SnapMails/refs/heads/main/public/desktop-view.jpg)
+![SnapMails - Temporary disposable Email](https://raw.githubusercontent.com/ErolledDev/mailog/refs/heads/main/public/desktop-view.jpg)
 
 # SnapMails - Temporary Email Service
 
