@@ -5,6 +5,33 @@ import path from 'path';
 import compression from 'vite-plugin-compression';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 
+// Copy static files to dist
+const copyStaticFiles = () => {
+  const files = [
+    'robots.txt',
+    'sitemap.xml',
+    'manifest.json',
+    'icon-192x192.png',
+    'icon-512x512.png',
+    'og-image.jpeg',
+    'twitter-image.jpeg',
+    'desktop-view.jpg',
+    'mobile-view.jpg',
+    'vite.svg'
+  ];
+
+  files.forEach(file => {
+    const sourcePath = path.join('public', file);
+    const targetPath = path.join('dist', file);
+    
+    if (fs.existsSync(sourcePath)) {
+      fs.copyFileSync(sourcePath, targetPath);
+    } else {
+      console.warn(`Warning: ${file} not found in public directory`);
+    }
+  });
+};
+
 // Generate static HTML files for each route
 const generateStaticFiles = () => {
   const routes = [
@@ -126,6 +153,7 @@ export default defineConfig({
     {
       name: 'generate-static-files',
       closeBundle() {
+        copyStaticFiles();
         generateStaticFiles();
         generateSitemap();
         generateRobotsTxt();
