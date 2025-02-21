@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>URL Shortener</title>
+</head>
+<body>
+
+<h1>URL Shortener</h1>
+
+<label for="longURL">Long URL:</label>
+<input type="text" id="longURL" name="longURL" size="50"><br><br>
+
+<label for="customCode">Custom Code (optional):</label>
+<input type="text" id="customCode" name="customCode"><br><br>
+
+<button onclick="shortenURL()">Shorten URL</button>
+
+<div id="result"></div>
+
+<script>
+function shortenURL() {
+  const longURL = document.getElementById("longURL").value;
+  const customCode = document.getElementById("customCode").value;
+  const resultDiv = document.getElementById("result");
+
+  const apiUrl = 'https://snapmails.xyz//api/create-link'; // **REPLACE with the actual API URL!**
+
+  fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': 'zvEQPZfgDuE3buoiFopFXvhXg9ESty3c' // Your API key
+    },
+    body: JSON.stringify({
+      url: longURL,
+      code: customCode || undefined // Send 'code' only if it's not empty
+    })
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {throw new Error(err.error || response.statusText)}); //improved error handling
+    }
+    return response.json();
+  })
+  .then(data => {
+    resultDiv.innerHTML = `<p>Shortened URL: <a href="${data.code}" target="_blank">https://your-domain.com/${data.code}</a></p>`; // **REPLACE your-domain.com!**
+  })
+  .catch(error => {
+    resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+  });
+}
+</script>
+
+</body>
+</html>
