@@ -1,23 +1,13 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  environment = { NODE_VERSION = "20" }
 
-# Handle client-side routing and 404s
+# Handle client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[[redirects]]
-  from = "/404"
-  to = "/404/index.html"
-  status = 404
-
-# Enable SPA prerendering
-[build.processing]
-  skip_processing = false
-[build.processing.html]
-  pretty_urls = true
 
 # Security headers
 [[headers]]
@@ -27,18 +17,52 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:; frame-src 'self' https://googleads.g.doubleclick.net https://www.google.com;"
-    Cache-Control = "public, max-age=31536000"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = """
+      default-src 'self' https:; \
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com; \
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
+      img-src 'self' https: data:; \
+      font-src 'self' https://fonts.gstatic.com data:; \
+      connect-src 'self' https://api.guerrillamail.com https://www.google-analytics.com; \
+      frame-src 'self' https://googleads.g.doubleclick.net https://www.google.com; \
+      object-src 'none'
+    """
 
-# Special headers for sitemap.xml and robots.txt
+# Cache control for static assets
 [[headers]]
-  for = "/sitemap.xml"
+  for = "/*.js"
   [headers.values]
-    Content-Type = "application/xml"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Special headers for PWA assets
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Content-Type = "application/json"
     Cache-Control = "public, max-age=3600"
 
 [[headers]]
-  for = "/robots.txt"
+  for = "/sw.js"
   [headers.values]
-    Content-Type = "text/plain"
-    Cache-Control = "public, max-age=3600"
+    Cache-Control = "public, max-age=0, must-revalidate"
