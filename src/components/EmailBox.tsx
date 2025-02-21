@@ -76,6 +76,7 @@ const EmailBox = () => {
   const refreshTimerRef = useRef<number>();
   const lastCheckRef = useRef<number>(0);
   const previousEmailCountRef = useRef(0);
+  const isNewEmailRef = useRef(false);
 
   const getDisplayEmail = useCallback(() => {
     const username = emailAddress.split('@')[0];
@@ -212,14 +213,31 @@ const EmailBox = () => {
     try {
       setIsTrashDisabled(true);
       setError(null);
+      isNewEmailRef.current = true;
       
       const response = await client.getEmailAddress();
+      
+      // Clear all storage before setting new email
+      localStorage.removeItem(EMAIL_STORAGE_KEY);
+      localStorage.removeItem(EMAILS_STORAGE_KEY);
+      localStorage.removeItem(EMAIL_TIMESTAMP_KEY);
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      
+      const newTimestamp = Date.now();
       setEmailAddress(response.email_addr);
       setNewEmailUser(response.email_addr.split('@')[0]);
-      setEmailTimestamp(Date.now());
+      setEmailTimestamp(newTimestamp);
       setEmails([]);
       setSelectedEmail(null);
-      localStorage.removeItem(EMAILS_STORAGE_KEY);
+      
+      // Immediately save new state
+      localStorage.setItem(EMAIL_STORAGE_KEY, response.email_addr);
+      localStorage.setItem(EMAIL_TIMESTAMP_KEY, String(newTimestamp));
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
+        email: response.email_addr,
+        timestamp: newTimestamp,
+        domain: selectedDomain
+      }));
       
       toast.success('New email address generated', {
         duration: 3000,
@@ -237,8 +255,9 @@ const EmailBox = () => {
         duration: 3000,
         position: 'top-right',
       });
+      isNewEmailRef.current = false;
     }
-  }, [client, checkEmails, isTrashDisabled]);
+  }, [client, checkEmails, isTrashDisabled, selectedDomain]);
 
   const renderEmailContent = useCallback((content: string) => {
     try {
@@ -308,18 +327,28 @@ const EmailBox = () => {
   useEffect(() => {
     const initializeEmail = async () => {
       try {
+        if (isNewEmailRef.current) {
+          return; // Skip initialization if we just generated a new email
+        }
+
         const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
-        if (savedEmail) {
+        const savedTimestamp = localStorage.getItem(EMAIL_TIMESTAMP_KEY);
+        
+        if (savedEmail && savedTimestamp) {
           const emailUser = savedEmail.split('@')[0];
           const response = await client.setEmailUser(emailUser);
           setEmailAddress(response.email_addr);
           setNewEmailUser(emailUser);
-          setEmailTimestamp(Date.now());
+          setEmailTimestamp(Number(savedTimestamp));
         } else {
           const response = await client.getEmailAddress();
+          const newTimestamp = Date.now();
           setEmailAddress(response.email_addr);
           setNewEmailUser(response.email_addr.split('@')[0]);
-          setEmailTimestamp(Date.now());
+          setEmailTimestamp(newTimestamp);
+          
+          localStorage.setItem(EMAIL_STORAGE_KEY, response.email_addr);
+          localStorage.setItem(EMAIL_TIMESTAMP_KEY, String(newTimestamp));
         }
         
         await checkEmails(false);
