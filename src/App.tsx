@@ -13,6 +13,7 @@ import {
   Award,
 } from 'lucide-react';
 import { Link, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import EmailBox from './components/EmailBox';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
@@ -21,6 +22,12 @@ import Features from './pages/Features';
 import NotFound from './pages/NotFound';
 import FAQ from './pages/FAQ';
 import PWAPrompt from './components/PWAPrompt';
+
+const LoadingSpinner: React.FC = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
+);
 
 const ComparisonSection = () => (
   <section className="py-16 dark:bg-gray-900">
@@ -106,7 +113,7 @@ const TestimonialsSection = () => (
       <h2 className="text-4xl font-bold text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
         What Our Users Say
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 ">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
           {
             name: 'Sarah Chen',
@@ -254,56 +261,6 @@ const Home = () => {
     </ErrorBoundary>
   );
 };
-
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Something went wrong
-            </h2>
-            <button
-              onClick={() => {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.reload();
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-const LoadingSpinner: React.FC = () => (
-  <div className="flex items-center justify-center min-h-[400px]">
-    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-  </div>
-);
 
 const App: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -472,7 +429,7 @@ const App: React.FC = () => {
                   </span>
                 </div>
                 <p className="mt-4 text-sm text-gray-700 dark:text-gray-200">
-                 Customizable Temporary disposable email addresses for your privacy needs.
+                  Customizable Temporary disposable email addresses for your privacy needs.
                 </p>
               </div>
               <div>
