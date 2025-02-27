@@ -1,3 +1,0 @@
-# Redirect Netlify domain to custom domain
-http://snapmails.netlify.app/* https://snapmails.xyz/:splat 301!
-https://snapmails.netlify.app/* https://snapmails.xyz/:splat 301!
