@@ -49,18 +49,18 @@ export default function Features() {
   return (
     <>
       <Helmet>
-        <title>Features - SnapMails Temporary Email Service</title>
-        <meta name="description" content="Discover SnapMails' powerful features: customizable email addresses, instant access, real-time notifications, and enhanced privacy protection." />
-        <meta name="keywords" content="email features, temporary email features, disposable email service, email customization, email privacy" />
+        <title>SnapMails - Temporary Disposable Email | Spam-Free Temp mail</title>
+        <meta name="description" content="Create secure, customizable temporary disposable emails instantly. Protect your privacy with SnapMails' free temporary email service - no registration required." />
+        <meta name="keywords" content="temporary email, disposable email, temp mail, anonymous email, spam protection, custom email, temporary mail service, secure email, snapmails" />
         <link rel="canonical" href="https://snapmails.xyz/features" />
         
-        <meta property="og:title" content="SnapMails Features - Customizable Temporary Email Service" />
-        <meta property="og:description" content="Discover SnapMails' powerful features: customizable email addresses, instant access, real-time notifications, and enhanced privacy protection." />
+        <meta property="og:title" content="SnapMails - Temporary Disposable Email | Spam-Free Temp mail" />
+        <meta property="og:description" content="Create secure, customizable temporary disposable emails instantly. Protect your privacy with SnapMails' free temporary email service - no registration required." />
         <meta property="og:url" content="https://snapmails.xyz/features" />
         <meta property="og:type" content="website" />
         
-        <meta name="twitter:title" content="SnapMails Features - Temporary Email Service" />
-        <meta name="twitter:description" content="Discover our powerful features for temporary email management." />
+        <meta name="twitter:title" content="SnapMails - Temporary Disposable Email | Spam-Free Temp mail" />
+        <meta name="twitter:description" content="Create secure, customizable temporary disposable emails instantly. Protect your privacy with SnapMails' free temporary email service." />
       </Helmet>
 
       <main className="max-w-7xl mx-auto px-4 py-16" role="main">

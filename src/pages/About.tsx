@@ -6,18 +6,18 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About SnapMails - Our Mission and Values</title>
-        <meta name="description" content="Learn about SnapMails' commitment to email privacy and security. Discover how we're making temporary email services more accessible and customizable." />
-        <meta name="keywords" content="about snapmails, email privacy, temporary email service, disposable email company" />
+        <title>SnapMails - Temporary Disposable Email | Spam-Free Temp mail</title>
+        <meta name="description" content="Create secure, customizable temporary disposable emails instantly. Protect your privacy with SnapMails' free temporary email service - no registration required." />
+        <meta name="keywords" content="temporary email, disposable email, temp mail, anonymous email, spam protection, custom email, temporary mail service, secure email, snapmails" />
         <link rel="canonical" href="https://snapmails.xyz/about" />
         
-        <meta property="og:title" content="About SnapMails - Temporary Email Service" />
-        <meta property="og:description" content="Learn about SnapMails' commitment to email privacy and security." />
+        <meta property="og:title" content="SnapMails - Temporary Disposable Email | Spam-Free Temp mail" />
+        <meta property="og:description" content="Create secure, customizable temporary disposable emails instantly. Protect your privacy with SnapMails' free temporary email service - no registration required." />
         <meta property="og:url" content="https://snapmails.xyz/about" />
         <meta property="og:type" content="website" />
         
-        <meta name="twitter:title" content="About SnapMails - Our Story" />
-        <meta name="twitter:description" content="Discover the team and mission behind SnapMails." />
+        <meta name="twitter:title" content="SnapMails - Temporary Disposable Email | Spam-Free Temp mail" />
+        <meta name="twitter:description" content="Create secure, customizable temporary disposable emails instantly. Protect your privacy with SnapMails' free temporary email service." />
       </Helmet>
 
       <main className="max-w-4xl mx-auto px-4 py-16" role="main">
