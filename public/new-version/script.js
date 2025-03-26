@@ -199,58 +199,106 @@ async function checkEmails() {
     }
 }
 
-// Rest of the code remains unchanged...
+async function fetchEmail(emailId) {
+    try {
+        const response = await request('fetch_email', { email_id: emailId });
+        return response;
+    } catch (error) {
+        showToast('Failed to fetch email', 'error');
+        throw error;
+    }
+}
 
-// Initialize the application
+function renderEmails() {
+    if (emails.length === 0) {
+        emailList.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-gray-500 p-8">
+                <svg class="w-12 h-12 mb-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <p class="text-center text-gray-600 font-medium">No emails yet</p>
+                <p class="text-sm text-gray-400 mt-2 text-center">
+                    Waiting for new emails... They'll appear here automatically
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    emailList.innerHTML = emails.map(email => `
+        <button
+            onclick="handleEmailClick('${email.mail_id}')"
+            class="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700"
+        >
+            <div class="flex justify-between items-start mb-1">
+                <div class="font-medium truncate flex-1 dark:text-white">${email.mail_from}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400 ml-2">${email.mail_date}</div>
+            </div>
+            <div class="text-sm font-medium truncate mb-1 dark:text-gray-200">${email.mail_subject}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 truncate">${email.mail_excerpt}</div>
+        </button>
+    `).join('');
+}
+
+async function handleEmailClick(emailId) {
+    try {
+        const email = await fetchEmail(emailId);
+        emailContent.innerHTML = `
+            <div class="p-4">
+                <div class="mb-4">
+                    <div class="font-medium mb-2 dark:text-white">${email.mail_subject}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">From: ${email.mail_from}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Date: ${email.mail_date}</div>
+                </div>
+                <div class="prose max-w-none dark:prose-invert">
+                    ${email.mail_body}
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Failed to fetch email:', error);
+        showToast('Failed to load email content', 'error');
+    }
+}
+
+// Event Listeners
 document.addEventListener('DOMContentLoaded', async () => {
     initializeTheme();
     
+    themeToggle.addEventListener('click', toggleTheme);
+    
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+    
+    document.getElementById('refreshButton').addEventListener('click', checkEmails);
+    
+    document.getElementById('copyButton').addEventListener('click', () => {
+        navigator.clipboard.writeText(currentEmail)
+            .then(() => showToast('Email copied to clipboard'))
+            .catch(() => showToast('Failed to copy email', 'error'));
+    });
+    
+    document.getElementById('editButton').addEventListener('click', () => {
+        const newEmail = prompt('Enter new email username:');
+        if (newEmail) {
+            setEmailUser(newEmail);
+        }
+    });
+    
+    document.getElementById('newEmailButton').addEventListener('click', getEmailAddress);
+    
+    domainSelect.addEventListener('change', (e) => {
+        const username = currentEmail.split('@')[0];
+        setEmailUser(username);
+    });
+    
     try {
-        // Restore session
-        const savedSession = sessionStorage.getItem(SESSION_STORAGE_KEY);
-        if (savedSession) {
-            try {
-                const { sidToken: savedToken } = JSON.parse(savedSession);
-                if (savedToken) sidToken = savedToken;
-            } catch (e) {
-                console.error('Failed to parse saved session:', e);
-            }
-        }
-
-        // Restore domain
-        const savedDomain = localStorage.getItem(DOMAIN_STORAGE_KEY);
-        if (savedDomain) domainSelect.value = savedDomain;
-
-        // Restore email and emails
-        const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
-        if (savedEmail) {
-            currentEmail = savedEmail;
-            emailDisplay.textContent = currentEmail;
-            const savedEmails = localStorage.getItem(EMAILS_STORAGE_KEY);
-            if (savedEmails) {
-                try {
-                    emails = JSON.parse(savedEmails);
-                    renderEmails();
-                } catch (e) {
-                    console.error('Failed to parse saved emails:', e);
-                    emails = [];
-                }
-            }
-        } else {
-            await getEmailAddress();
-        }
-
-        // Start auto-refresh with error handling
-        const refreshLoop = () => {
-            checkEmails().catch(error => {
-                console.error('Auto-refresh failed:', error);
-            });
-            setTimeout(refreshLoop, REFRESH_INTERVAL);
-        };
-        
-        refreshLoop();
+        await getEmailAddress();
+        setInterval(checkEmails, REFRESH_INTERVAL);
     } catch (error) {
-        console.error('Initialization failed:', error);
+        console.error('Failed to initialize:', error);
         showToast('Failed to initialize email service', 'error');
     }
 });
