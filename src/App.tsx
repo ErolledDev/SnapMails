@@ -61,39 +61,36 @@ const Home = () => {
   return (
     <ErrorBoundary>
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-blue-50/50 dark:from-blue-950/30 dark:via-transparent dark:to-blue-950/30 pointer-events-none"></div>
-        <div className="relative">
-          <div className="text-center max-w-4xl mx-auto px-4 pt-20 pb-16">
-            <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-blue-100/80 dark:bg-blue-900/50 backdrop-blur-sm mb-8">
-              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 mr-2" />
-              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Premium Temporary Email Service</span>
+        <div className="text-center max-w-4xl mx-auto px-4 pt-20 pb-16">
+          <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-blue-100/80 dark:bg-blue-900/50 backdrop-blur-sm mb-8">
+            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 mr-2" />
+            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Premium Temporary Email Service</span>
+          </div>
+          <div>
+            <h1 className="text-5xl font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-blue-600">
+              Your Privacy Matters
+            </h1>
+            <p className="text-2xl font-medium text-gray-800 dark:text-gray-100 max-w-2xl mx-auto mb-6 leading-relaxed">
+              Instant, Secure, and Customizable Temporary Email Service
+            </p>
+            <p className="text-lg text-gray-700 dark:text-gray-200 max-w-2xl mx-auto mb-8 leading-relaxed">
+              The only customizable temporary email service. Keep your real
+              inbox clean and secure with instant disposable email addresses
+              for temporary use.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-6 justify-center mt-12 mb-12">
+            <div className="flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-all">
+              <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Privacy Protected</span>
             </div>
-            <div>
-              <h1 className="text-5xl font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-blue-600">
-                Your Privacy Matters
-              </h1>
-              <p className="text-2xl font-medium text-gray-800 dark:text-gray-100 max-w-2xl mx-auto mb-6 leading-relaxed">
-                Instant, Secure, and Customizable Temporary Email Service
-              </p>
-              <p className="text-lg text-gray-700 dark:text-gray-200 max-w-2xl mx-auto mb-8 leading-relaxed">
-                The only customizable temporary email service. Keep your real
-                inbox clean and secure with instant disposable email addresses
-                for temporary use.
-              </p>
+            <div className="flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-all">
+              <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Instant Access</span>
             </div>
-            <div className="flex flex-wrap gap-6 justify-center mt-12 mb-12">
-              <div className="flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-all">
-                <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Privacy Protected</span>
-              </div>
-              <div className="flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-all">
-                <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Instant Access</span>
-              </div>
-              <div className="flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-all">
-                <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">No Registration</span>
-              </div>
+            <div className="flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-all">
+              <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">No Registration</span>
             </div>
           </div>
         </div>
@@ -153,7 +150,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <header className="bg-white/80 dark:bg-gray-900/80 shadow-lg dark:shadow-gray-800/50 sticky top-0 z-50 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">

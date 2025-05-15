@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { Mail, RefreshCw, Copy, Edit2, AlertCircle, ChevronDown, Trash2 } from 'lucide-react';
+import {
+  Mail,
+  RefreshCw,
+  Copy,
+  Edit2,
+  AlertCircle,
+  ChevronDown,
+  Trash2,
+  Maximize2,
+  X
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { GuerrillaClient } from '../lib/guerrilla';
 
@@ -13,6 +23,65 @@ interface Email {
   mail_date: string;
   mail_body?: string;
 }
+
+interface ModalProps {
+  email: Email;
+  onClose: () => void;
+}
+
+const EmailModal: React.FC<ModalProps> = ({ email, onClose }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <div>
+            <h3 className="font-medium dark:text-white">{email.mail_subject}</h3>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              From: {email.mail_from}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Date: {email.mail_date}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: email.mail_body || '' }} />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const REFRESH_INTERVAL = 15000;
 const EMAIL_STORAGE_KEY = 'tempmail_email';
@@ -64,6 +133,7 @@ const EmailBox = () => {
   const [emailAddress, setEmailAddress] = useState('');
   const [emails, setEmails] = useState<Email[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [modalEmail, setModalEmail] = useState<Email | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [newEmailUser, setNewEmailUser] = useState('');
@@ -148,6 +218,39 @@ const EmailBox = () => {
     }
   }, [client]);
 
+  const handleDeleteEmail = useCallback(async (emailId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      await client.deleteEmail([emailId]);
+      setEmails(prevEmails => prevEmails.filter(email => email.mail_id !== emailId));
+      if (selectedEmail?.mail_id === emailId) {
+        setSelectedEmail(null);
+      }
+      toast.success('Email deleted successfully', {
+        duration: 2000,
+        position: 'top-right',
+      });
+    } catch (error) {
+      toast.error('Failed to delete email', {
+        duration: 3000,
+        position: 'top-right',
+      });
+    }
+  }, [client, selectedEmail]);
+
+  const openEmailModal = useCallback(async (email: Email, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      const fullEmail = await client.fetchEmail(email.mail_id);
+      setModalEmail({ ...email, mail_body: fullEmail.mail_body });
+    } catch (error) {
+      toast.error('Failed to load email content', {
+        duration: 3000,
+        position: 'top-right',
+      });
+    }
+  }, [client]);
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -217,7 +320,6 @@ const EmailBox = () => {
       
       const response = await client.getEmailAddress();
       
-      // Clear all storage before setting new email
       localStorage.removeItem(EMAIL_STORAGE_KEY);
       localStorage.removeItem(EMAILS_STORAGE_KEY);
       localStorage.removeItem(EMAIL_TIMESTAMP_KEY);
@@ -230,7 +332,6 @@ const EmailBox = () => {
       setEmails([]);
       setSelectedEmail(null);
       
-      // Immediately save new state
       localStorage.setItem(EMAIL_STORAGE_KEY, response.email_addr);
       localStorage.setItem(EMAIL_TIMESTAMP_KEY, String(newTimestamp));
       sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
@@ -258,19 +359,6 @@ const EmailBox = () => {
       isNewEmailRef.current = false;
     }
   }, [client, checkEmails, isTrashDisabled, selectedDomain]);
-
-  const renderEmailContent = useCallback((content: string) => {
-    try {
-      return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />;
-    } catch (error) {
-      console.error('Failed to render email content:', error);
-      return (
-        <div className="p-4 bg-red-50 text-red-600 rounded-lg">
-          Error rendering email content. Please try refreshing the page.
-        </div>
-      );
-    }
-  }, []);
 
   const handleEmailChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -323,12 +411,11 @@ const EmailBox = () => {
     }
   };
 
-  // Initialize email and setup auto-refresh
   useEffect(() => {
     const initializeEmail = async () => {
       try {
         if (isNewEmailRef.current) {
-          return; // Skip initialization if we just generated a new email
+          return;
         }
 
         const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
@@ -365,7 +452,6 @@ const EmailBox = () => {
 
     initializeEmail();
 
-    // Setup auto-refresh
     const refreshInterval = setInterval(() => {
       checkEmails(false);
     }, REFRESH_INTERVAL);
@@ -375,7 +461,6 @@ const EmailBox = () => {
     };
   }, [client, checkEmails]);
 
-  // Load saved state
   useEffect(() => {
     const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
     const savedEmails = localStorage.getItem(EMAILS_STORAGE_KEY);
@@ -414,7 +499,6 @@ const EmailBox = () => {
     }
   }, []);
 
-  // Save state
   useEffect(() => {
     if (emailAddress && emailTimestamp) {
       localStorage.setItem(EMAIL_STORAGE_KEY, emailAddress);
@@ -437,7 +521,7 @@ const EmailBox = () => {
 
   if (initialLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden animate-pulse">
+      <div className="bg-white dark:bg-gray-800 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden animate-pulse">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
@@ -451,8 +535,8 @@ const EmailBox = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-800">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm font-medium text-gray-600 dark:text-gray-300">Your temporary email address:</div>
           <div className="flex gap-2 items-center">
@@ -472,7 +556,7 @@ const EmailBox = () => {
                 title="Copy email address"
                 aria-label="Copy email address to clipboard"
               >
-                <Copy className="w-4 h-4 dark:text-gray-300 " aria-hidden="true" />
+                <Copy className="w-4 h-4 dark:text-gray-300" aria-hidden="true" />
               </button>
               {showCopied && (
                 <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg animate-fade-in-out">
@@ -555,7 +639,7 @@ const EmailBox = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 h-[600px]">
-        <div className="border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+        <div className="border-r border-gray-200 dark:border-gray-800 overflow-y-auto">
           {isRefreshing ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
@@ -568,13 +652,29 @@ const EmailBox = () => {
                 <button
                   key={email.mail_id}
                   onClick={() => handleEmailClick(email)}
-                  className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                  className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group ${
                     selectedEmail?.mail_id === email.mail_id ? 'bg-blue-50 dark:bg-blue-900/50' : ''
                   }`}
                 >
                   <div className="flex justify-between items-start mb-1">
                     <div className="font-medium truncate flex-1 dark:text-white">{email.mail_from}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 ml-2">{email.mail_date}</div>
+                    <div className="flex items-center ml-2 space-x-1">
+                      <button
+                        onClick={(e) => handleDeleteEmail(email.mail_id, e)}
+                        className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-full transition-all"
+                        title="Delete email"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
+                      <button
+                        onClick={(e) => openEmailModal(email, e)}
+                        className="p-1 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all"
+                        title="Open in full view"
+                      >
+                        <Maximize2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      </button>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{email.mail_date}</div>
+                    </div>
                   </div>
                   <div className="text-sm font-medium truncate mb-1 dark:text-gray-200">{email.mail_subject}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 truncate">{email.mail_excerpt}</div>
@@ -584,7 +684,7 @@ const EmailBox = () => {
           )}
         </div>
 
-        <div className="overflow-y-auto bg-white dark:bg-gray-800">
+        <div className="overflow-y-auto bg-gray-50 dark:bg-gray-800">
           {selectedEmail ? (
             <div className="p-4">
               <div className="mb-4">
@@ -592,7 +692,7 @@ const EmailBox = () => {
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">From: {selectedEmail.mail_from}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Date: {selectedEmail.mail_date}</div>
               </div>
-              {renderEmailContent(selectedEmail.mail_body || '')}
+              <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedEmail.mail_body || '' }} />
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
@@ -602,6 +702,13 @@ const EmailBox = () => {
           )}
         </div>
       </div>
+
+      {modalEmail && (
+        <EmailModal
+          email={modalEmail}
+          onClose={() => setModalEmail(null)}
+        />
+      )}
     </div>
   );
 };

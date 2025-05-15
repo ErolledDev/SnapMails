@@ -85,7 +85,13 @@ export class GuerrillaClient {
       clearTimeout(timeout);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please wait a moment...');
+        }
+        if (response.status >= 500) {
+          throw new Error('Email service temporarily unavailable. Retrying...');
+        }
+        throw new Error(`Connection issue. Reconnecting...`);
       }
       
       const data = await response.json();
@@ -106,17 +112,23 @@ export class GuerrillaClient {
       this.retryCount = 0; // Reset retry count on success
       return data;
     } catch (error) {
-      if (this.retryCount < this.maxRetries) {
-        this.retryCount++;
-        // Exponential backoff with jitter
-        const delay = Math.min(
-          this.retryDelay * Math.pow(2, this.retryCount - 1) + Math.random() * 1000,
-          30000 // Max delay of 30 seconds
-        );
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return this.request<T>(endpoint, params);
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Connection timeout. Retrying...');
+        }
+        if (this.retryCount < this.maxRetries) {
+          this.retryCount++;
+          // Exponential backoff with jitter
+          const delay = Math.min(
+            this.retryDelay * Math.pow(2, this.retryCount - 1) + Math.random() * 1000,
+            30000 // Max delay of 30 seconds
+          );
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return this.request<T>(endpoint, params);
+        }
+        throw error;
       }
-      throw error;
+      throw new Error('Connection lost. Reconnecting...');
     }
   }
 
@@ -127,7 +139,7 @@ export class GuerrillaClient {
       this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
-      throw new Error('Failed to generate email address. Please try again.');
+      throw new Error('Unable to generate email address. Please try again.');
     }
   }
 
@@ -139,7 +151,7 @@ export class GuerrillaClient {
       this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
-      throw new Error('Failed to set email address. Please try again.');
+      throw new Error('Unable to set email address. Please try again.');
     }
   }
 
@@ -156,7 +168,10 @@ export class GuerrillaClient {
       this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
-      throw new Error('Failed to check emails. Please try again.');
+      if (error instanceof Error) {
+        throw error; // Propagate the specific error message
+      }
+      throw new Error('Connection lost. Reconnecting...');
     }
   }
 
@@ -173,7 +188,10 @@ export class GuerrillaClient {
       this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
-      throw new Error('Failed to retrieve emails. Please try again.');
+      if (error instanceof Error) {
+        throw error; // Propagate the specific error message
+      }
+      throw new Error('Connection lost. Reconnecting...');
     }
   }
 
@@ -183,7 +201,7 @@ export class GuerrillaClient {
       this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
-      throw new Error('Failed to fetch email content. Please try again.');
+      throw new Error('Unable to fetch email content. Please try again.');
     }
   }
 
@@ -193,7 +211,7 @@ export class GuerrillaClient {
       this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
-      throw new Error('Failed to forget email address. Please try again.');
+      throw new Error('Unable to forget email address. Please try again.');
     }
   }
 
@@ -207,7 +225,7 @@ export class GuerrillaClient {
       this.retryCount = 0; // Reset retry count on success
       return response;
     } catch (error) {
-      throw new Error('Failed to delete emails. Please try again.');
+      throw new Error('Unable to delete emails. Please try again.');
     }
   }
 }
