@@ -22,7 +22,7 @@
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; \
       img-src 'self' https: data:; \
       font-src 'self' https://fonts.gstatic.com data:; \
-      connect-src 'self' https://api.guerrillamail.com https://www.google-analytics.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://fonts.gstatic.com https://fonts.googleapis.com https://*.google.com https://*.doubleclick.net https://*.adtrafficquality.google; \
+      connect-src 'self' https://api.guerrillamail.com https://www.google-analytics.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://fonts.gstatic.com https://fonts.googleapis.com https://*.google.com https://*.doubleclick.net https://*.adtrafficquality.google https://*.g.doubleclick.net; \
       frame-src 'self' https://googleads.g.doubleclick.net https://www.google.com https://tpc.googlesyndication.com https://*.doubleclick.net; \
       fenced-frame-src 'self' https://googleads.g.doubleclick.net https://www.google.com https://tpc.googlesyndication.com https://*.doubleclick.net; \
       object-src 'none'; \
