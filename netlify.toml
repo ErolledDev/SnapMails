@@ -18,12 +18,13 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Content-Security-Policy = """
       default-src 'self' https:; \
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://partner.googleadservices.com https://tpc.googlesyndication.com https://*.google.com https://*.gstatic.com; \
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://partner.googleadservices.com https://tpc.googlesyndication.com https://*.google.com https://*.gstatic.com https://*.doubleclick.net; \
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; \
       img-src 'self' https: data:; \
       font-src 'self' https://fonts.gstatic.com data:; \
-      connect-src 'self' https://api.guerrillamail.com https://www.google-analytics.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://fonts.gstatic.com https://fonts.googleapis.com; \
-      frame-src 'self' https://googleads.g.doubleclick.net https://www.google.com https://tpc.googlesyndication.com; \
+      connect-src 'self' https://api.guerrillamail.com https://www.google-analytics.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://fonts.gstatic.com https://fonts.googleapis.com https://*.google.com https://*.doubleclick.net https://*.adtrafficquality.google; \
+      frame-src 'self' https://googleads.g.doubleclick.net https://www.google.com https://tpc.googlesyndication.com https://*.doubleclick.net; \
+      fenced-frame-src 'self' https://googleads.g.doubleclick.net https://www.google.com https://tpc.googlesyndication.com https://*.doubleclick.net; \
       object-src 'none'; \
       base-uri 'self'; \
       form-action 'self'
