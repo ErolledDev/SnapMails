@@ -1,14 +1,10 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import {
   Mail,
-  Shield,
-  Clock,
-  Lock,
   Menu,
   X,
   Moon,
   Sun,
-  Sparkles,
 } from 'lucide-react';
 import { Link, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -60,48 +56,14 @@ const FallbackError = () => (
 const Home = () => {
   return (
     <ErrorBoundary>
-      <div className="relative">
-        <div className="text-center max-w-4xl mx-auto px-4 pt-20 pb-16">
-          <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-blue-100/80 dark:bg-blue-900/50 backdrop-blur-sm mb-8">
-            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 mr-2" />
-            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Premium Temporary Email Service</span>
-          </div>
-          <div>
-            <h1 className="text-5xl font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-blue-600">
-              Your Privacy Matters
-            </h1>
-            <p className="text-2xl font-medium text-gray-800 dark:text-gray-100 max-w-2xl mx-auto mb-6 leading-relaxed">
-              Instant, Secure, and Customizable Temporary Email Service
-            </p>
-            <p className="text-lg text-gray-700 dark:text-gray-200 max-w-2xl mx-auto mb-8 leading-relaxed">
-              The only customizable temporary email service. Keep your real
-              inbox clean and secure with instant disposable email addresses
-              for temporary use.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-6 justify-center mt-12 mb-12">
-            <div className="flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-all">
-              <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Privacy Protected</span>
-            </div>
-            <div className="flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-all">
-              <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Instant Access</span>
-            </div>
-            <div className="flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md hover:shadow-lg transition-all">
-              <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">No Registration</span>
-            </div>
-          </div>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
+        <div className="max-w-4xl mx-auto">
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner />}>
+              <EmailBox />
+            </Suspense>
+          </ErrorBoundary>
         </div>
-      </div>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingSpinner />}>
-            <EmailBox />
-          </Suspense>
-        </ErrorBoundary>
       </main>
     </ErrorBoundary>
   );

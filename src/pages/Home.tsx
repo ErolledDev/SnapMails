@@ -82,132 +82,144 @@ const Home: React.FC = () => {
         </script>
       </Helmet>
 
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-blue-50/50 dark:from-blue-950/30 dark:via-transparent dark:to-blue-950/30 pointer-events-none"></div>
-        <div className="relative">
-          <div className="text-center max-w-4xl mx-auto px-4 pt-20 pb-16">
-            <h1 className="text-4xl font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800">
+      <div className="relative bg-gradient-to-br from-blue-50/50 via-white to-blue-50/50 dark:from-blue-950/30 dark:via-gray-900 dark:to-blue-950/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+          <div className="text-center max-w-3xl mx-auto">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-400 dark:via-blue-500 dark:to-blue-600">
               Free Temporary Email Service
             </h1>
-            <p className="text-2xl font-medium text-gray-800 dark:text-gray-100 max-w-2xl mx-auto mb-6 leading-relaxed">
+            <p className="text-xl sm:text-2xl font-medium text-gray-800 dark:text-gray-100 mb-4 leading-relaxed">
               Create instant disposable email addresses with unique customization features
             </p>
-            <p className="text-lg text-gray-700 dark:text-gray-200 max-w-2xl mx-auto mb-8 leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
               Get a free temporary email address instantly. No registration required. Perfect for protecting your privacy, avoiding spam, and testing services safely.
             </p>
           </div>
         </div>
       </div>
 
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">Instant Email Protection</h2>
-          <p className="text-lg text-gray-700 dark:text-gray-200 mb-4">
-            Start using our secure temporary email service in seconds. No registration or personal information required.
-          </p>
-          <AdUnit 
-            slot="1234567890"
-            format="auto"
-            position="top"
-            className="mt-4"
-          />
-        </section>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdUnit
+          slot="1234567890"
+          format="auto"
+          position="top"
+          className="py-8 sm:py-12"
+        />
 
-        <ErrorBoundary>
-          <EmailBox />
-        </ErrorBoundary>
+        <div className="py-8 sm:py-12">
+          <ErrorBoundary>
+            <EmailBox />
+          </ErrorBoundary>
+        </div>
 
-        <AdUnit 
+        <AdUnit
           slot="0987654321"
           format="auto"
           position="bottom"
-          className="mb-8"
+          className="py-8 sm:py-12"
         />
 
-        <section className="mt-16 max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-center">Why Choose SnapMails?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Privacy Protection</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+        <section className="py-16 sm:py-20 border-t border-gray-200 dark:border-gray-800">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 mb-4">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 Keep your real email address private and protect yourself from unwanted spam and marketing emails.
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Easy to Use</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 mb-4">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 Get a temporary email address instantly - no registration or personal information required.
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Secure & Reliable</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 mb-4">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 Our service is built with security in mind, ensuring your temporary emails are protected.
               </p>
             </div>
           </div>
         </section>
 
-        <section className="mt-16 max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-center">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <section className="py-16 sm:py-20 border-t border-gray-200 dark:border-gray-800">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl font-bold text-blue-600">1</span>
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">1</span>
               </div>
-              <h3 className="font-semibold mb-2">Get Email Address</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                 Receive an instant temporary email address
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl font-bold text-blue-600">2</span>
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">2</span>
               </div>
-              <h3 className="font-semibold mb-2">Use Anywhere</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                 Use it to sign up for services or receive emails
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl font-bold text-blue-600">3</span>
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">3</span>
               </div>
-              <h3 className="font-semibold mb-2">Read Messages</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                 Instantly receive and read your messages
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl font-bold text-blue-600">4</span>
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">4</span>
               </div>
-              <h3 className="font-semibold mb-2">Stay Private</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                 Keep your real inbox clean and protected
               </p>
             </div>
           </div>
         </section>
 
-        <section className="mt-16 max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-center">Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Custom Domains</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+        <section className="py-16 sm:py-20 border-t border-gray-200 dark:border-gray-800">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 mb-4">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 Choose from multiple email domains to suit your needs. Switch between domains anytime.
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Real-time Updates</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 mb-4">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 Receive instant notifications when new emails arrive. No refresh needed.
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Mobile Friendly</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 mb-4">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 Access your temporary emails on any device with our responsive design.
               </p>
             </div>

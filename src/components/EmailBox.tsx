@@ -4,10 +4,8 @@ import {
   RefreshCw,
   Copy,
   Edit2,
-  AlertCircle,
   ChevronDown,
   Trash2,
-  Maximize2,
   X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -55,28 +53,28 @@ const EmailModal: React.FC<ModalProps> = ({ email, onClose }) => {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <div>
-            <h3 className="font-medium dark:text-white">{email.mail_subject}</h3>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-sm sm:text-base dark:text-white break-words">{email.mail_subject}</h3>
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 break-all">
               From: {email.mail_from}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Date: {email.mail_date}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+            className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: email.mail_body || '' }} />
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          <div className="prose prose-sm sm:prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: email.mail_body || '' }} />
         </div>
       </div>
     </div>
@@ -105,19 +103,6 @@ const EMAIL_DOMAINS = {
   spam: '@spam.me'
 } as const;
 
-const EditButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
-  return (
-    <button 
-      onClick={onClick} 
-      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-      title="Change Email"
-      aria-label="Change email address"
-    >
-      <Edit2 className="w-4 h-4 dark:text-gray-300" aria-hidden="true" />
-    </button>
-  );
-};
-
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
     <Mail className="w-12 h-12 mb-2 text-gray-400" />
@@ -132,7 +117,6 @@ const EmailBox = () => {
   const [client] = useState(() => new GuerrillaClient());
   const [emailAddress, setEmailAddress] = useState('');
   const [emails, setEmails] = useState<Email[]>([]);
-  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [modalEmail, setModalEmail] = useState<Email | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -207,7 +191,7 @@ const EmailBox = () => {
     try {
       setError(null);
       const fullEmail = await client.fetchEmail(email.mail_id);
-      setSelectedEmail({ ...email, mail_body: fullEmail.mail_body });
+      setModalEmail({ ...email, mail_body: fullEmail.mail_body });
       document.title = ORIGINAL_TITLE;
     } catch (error) {
       console.error('Failed to fetch email:', error);
@@ -223,8 +207,8 @@ const EmailBox = () => {
     try {
       await client.deleteEmail([emailId]);
       setEmails(prevEmails => prevEmails.filter(email => email.mail_id !== emailId));
-      if (selectedEmail?.mail_id === emailId) {
-        setSelectedEmail(null);
+      if (modalEmail?.mail_id === emailId) {
+        setModalEmail(null);
       }
       toast.success('Email deleted successfully', {
         duration: 2000,
@@ -236,20 +220,8 @@ const EmailBox = () => {
         position: 'top-right',
       });
     }
-  }, [client, selectedEmail]);
+  }, [client, modalEmail]);
 
-  const openEmailModal = useCallback(async (email: Email, event: React.MouseEvent) => {
-    event.stopPropagation();
-    try {
-      const fullEmail = await client.fetchEmail(email.mail_id);
-      setModalEmail({ ...email, mail_body: fullEmail.mail_body });
-    } catch (error) {
-      toast.error('Failed to load email content', {
-        duration: 3000,
-        position: 'top-right',
-      });
-    }
-  }, [client]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -330,7 +302,6 @@ const EmailBox = () => {
       setNewEmailUser(response.email_addr.split('@')[0]);
       setEmailTimestamp(newTimestamp);
       setEmails([]);
-      setSelectedEmail(null);
       
       localStorage.setItem(EMAIL_STORAGE_KEY, response.email_addr);
       localStorage.setItem(EMAIL_TIMESTAMP_KEY, String(newTimestamp));
@@ -522,13 +493,14 @@ const EmailBox = () => {
   if (initialLoading) {
     return (
       <div className="bg-white dark:bg-gray-800 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden animate-pulse">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 h-[600px]">
-          <div className="border-r border-gray-200 dark:border-gray-700"></div>
-          <div></div>
+        <div className="p-6 space-y-4">
+          <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
     );
@@ -536,93 +508,102 @@ const EmailBox = () => {
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-800">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">Your temporary email address:</div>
-          <div className="flex gap-2 items-center">
-            <button 
-              onClick={handleRefresh} 
-              className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all duration-300 ${isRefreshing ? 'animate-spin' : 'hover:rotate-180'}`}
-              title="Refresh emails"
-              aria-label="Refresh emails"
-              disabled={isRefreshing}
-            >
-              <RefreshCw className="w-4 h-4 dark:text-gray-300" aria-hidden="true" />
-            </button>
-            <div className="relative">
-              <button 
-                onClick={handleCopy} 
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors" 
-                title="Copy email address"
-                aria-label="Copy email address to clipboard"
-              >
-                <Copy className="w-4 h-4 dark:text-gray-300" aria-hidden="true" />
-              </button>
-              {showCopied && (
-                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg animate-fade-in-out">
-                  Copied!
-                </div>
-              )}
-            </div>
-            <EditButton onClick={() => setIsEditing(true)} />
-            <button
-              onClick={handleNewEmail}
-              className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors ${
-                isTrashDisabled ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              title={isTrashDisabled ? 'Please wait before generating a new email' : 'Get new email'}
-              aria-label={isTrashDisabled ? 'Please wait before generating a new email' : 'Get new email address'}
-              disabled={isTrashDisabled}
-            >
-              <Trash2 className="w-4 h-4 text-red-500" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
+      <div className="p-4 sm:p-6">
         {isEditing ? (
-          <form onSubmit={handleEmailChange} className="space-y-4">
-            <div className="flex-1">
-              <label htmlFor="email-username" className="sr-only">Email username</label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="email-username"
-                  type="text"
-                  value={newEmailUser}
-                  onChange={(e) => setNewEmailUser(e.target.value)}
-                  className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="Enter new email username"
-                  aria-label="New email username"
-                />
-                <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  {EMAIL_DOMAINS[selectedDomain]}
-                </span>
-              </div>
+          <form onSubmit={handleEmailChange} className="space-y-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <input
+                id="email-username"
+                type="text"
+                value={newEmailUser}
+                onChange={(e) => setNewEmailUser(e.target.value)}
+                className="w-full sm:flex-1 px-3 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                placeholder="Enter new email username"
+                aria-label="New email username"
+              />
+              <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                {EMAIL_DOMAINS[selectedDomain]}
+              </span>
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                className="px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
               >
                 Save
               </button>
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+                className="px-4 py-2 text-sm sm:text-base bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
               >
                 Cancel
               </button>
             </div>
           </form>
         ) : (
-          <>
-            <div className="font-mono text-lg mb-2 dark:text-white">{getDisplayEmail()}</div>
-            <div className="inline-block relative w-64">
-              <label htmlFor="domain-select" className="sr-only">Select email domain</label>
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  Your temporary email address:
+                </p>
+                <div className="font-mono text-base sm:text-xl lg:text-2xl break-all dark:text-white">
+                  {getDisplayEmail()}
+                </div>
+              </div>
+              <div className="flex gap-1 sm:gap-2 items-start flex-shrink-0">
+                <button
+                  onClick={handleRefresh}
+                  className={`p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all duration-300 ${isRefreshing ? 'animate-spin' : 'hover:rotate-180'}`}
+                  title="Refresh emails"
+                  aria-label="Refresh emails"
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-300" aria-hidden="true" />
+                </button>
+                <div className="relative">
+                  <button
+                    onClick={handleCopy}
+                    className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                    title="Copy email address"
+                    aria-label="Copy email address to clipboard"
+                  >
+                    <Copy className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-300" aria-hidden="true" />
+                  </button>
+                  {showCopied && (
+                    <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded shadow-lg animate-fade-in-out whitespace-nowrap z-10">
+                      Copied!
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                  title="Change Email"
+                  aria-label="Change email address"
+                >
+                  <Edit2 className="w-4 h-4 sm:w-5 sm:h-5 dark:text-gray-300" aria-hidden="true" />
+                </button>
+                <button
+                  onClick={handleNewEmail}
+                  className={`p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors ${
+                    isTrashDisabled ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  title={isTrashDisabled ? 'Please wait before generating a new email' : 'Get new email'}
+                  aria-label={isTrashDisabled ? 'Please wait before generating a new email' : 'Get new email address'}
+                  disabled={isTrashDisabled}
+                >
+                  <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+            <div className="inline-block relative">
               <select
                 id="domain-select"
                 value={selectedDomain}
                 onChange={(e) => handleDomainChange(e.target.value as keyof typeof EMAIL_DOMAINS)}
-                className="block w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer text-sm dark:text-white"
+                className="appearance-none bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-xs sm:text-sm dark:text-white"
               >
                 {Object.entries(EMAIL_DOMAINS).map(([key, domain]) => (
                   <option key={key} value={key}>
@@ -630,77 +611,57 @@ const EmailBox = () => {
                   </option>
                 ))}
               </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 h-[600px]">
-        <div className="border-r border-gray-200 dark:border-gray-800 overflow-y-auto">
-          {isRefreshing ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          ) : emails.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {emails.map((email) => (
-                <button
-                  key={email.mail_id}
-                  onClick={() => handleEmailClick(email)}
-                  className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group ${
-                    selectedEmail?.mail_id === email.mail_id ? 'bg-blue-50 dark:bg-blue-900/50' : ''
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <div className="font-medium truncate flex-1 dark:text-white">{email.mail_from}</div>
-                    <div className="flex items-center ml-2 space-x-1">
-                      <button
-                        onClick={(e) => handleDeleteEmail(email.mail_id, e)}
-                        className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-full transition-all"
-                        title="Delete email"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </button>
-                      <button
-                        onClick={(e) => openEmailModal(email, e)}
-                        className="p-1 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all"
-                        title="Open in full view"
-                      >
-                        <Maximize2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                      </button>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{email.mail_date}</div>
+      <div className="border-t border-gray-200 dark:border-gray-800">
+        {isRefreshing ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : emails.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="divide-y divide-gray-200 dark:divide-gray-800">
+            {emails.map((email) => (
+              <button
+                key={email.mail_id}
+                onClick={() => handleEmailClick(email)}
+                className="w-full p-3 sm:p-4 md:p-6 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+              >
+                <div className="flex justify-between items-start gap-2 mb-2">
+                  <div className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate flex-1 min-w-0">
+                    {email.mail_from}
+                  </div>
+                  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                    <button
+                      onClick={(e) => handleDeleteEmail(email.mail_id, e)}
+                      className="p-1 sm:p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-full transition-all"
+                      title="Delete email"
+                      aria-label="Delete email"
+                    >
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
+                    </button>
+                    <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      {email.mail_date}
                     </div>
                   </div>
-                  <div className="text-sm font-medium truncate mb-1 dark:text-gray-200">{email.mail_subject}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 truncate">{email.mail_excerpt}</div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="overflow-y-auto bg-gray-50 dark:bg-gray-800">
-          {selectedEmail ? (
-            <div className="p-4">
-              <div className="mb-4">
-                <div className="font-medium mb-2 dark:text-white">{selectedEmail.mail_subject}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">From: {selectedEmail.mail_from}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Date: {selectedEmail.mail_date}</div>
-              </div>
-              <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedEmail.mail_body || '' }} />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
-              <Mail className="w-12 h-12 mb-2" />
-              <p>Select an email to read</p>
-            </div>
-          )}
-        </div>
+                </div>
+                <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100 mb-1 sm:mb-2 truncate">
+                  {email.mail_subject}
+                </div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                  {email.mail_excerpt}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {modalEmail && (
