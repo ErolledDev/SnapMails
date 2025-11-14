@@ -317,137 +317,141 @@ const Home: React.FC = () => {
         <meta name="description" content="Instant disposable email. No signup. Auto-refresh. Privacy first." />
       </Helmet>
 
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
-        <div className="max-w-5xl mx-auto">
-          {/* Main Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-            {/* Sticky Email Bar */}
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-5 z-10">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your temporary email address:</p>
-                  {isEditing ? (
-                    <form onSubmit={saveUsername} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={newUsername}
-                        onChange={e => setNewUsername(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-lg font-medium dark:bg-gray-700 dark:text-white"
-                        autoFocus
-                      />
-                      <span className="font-medium text-gray-700 dark:text-gray-300">{EMAIL_DOMAINS[selectedDomain]}</span>
-                      <button type="submit" className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button type="button" onClick={() => setIsEditing(false)} className="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </form>
-                  ) : (
-                    <div className="flex items-center gap-3">
-                      <code className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white break-all">{fullEmail}</code>
-                      <button
-                        onClick={copyEmail}
-                        className="p-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                      >
-                        {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5 text-gray-600 dark:text-gray-300" />}
-                      </button>
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="p-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
-                      >
-                        <Edit2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+      {/* Main Content - No Extra Bottom Padding */}
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+        <div className="flex-1 flex items-center justify-center px-4 py-6">
+          <div className="w-full max-w-5xl">
+            {/* Main Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col h-full max-h-[80vh]">
+              {/* Sticky Email Bar */}
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-5 z-10">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your temporary email address:</p>
+                    {isEditing ? (
+                      <form onSubmit={saveUsername} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={newUsername}
+                          onChange={e => setNewUsername(e.target.value)}
+                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-lg font-medium dark:bg-gray-700 dark:text-white"
+                          autoFocus
+                        />
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{EMAIL_DOMAINS[selectedDomain]}</span>
+                        <button type="submit" className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button type="button" onClick={() => setIsEditing(false)} className="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <code className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white break-all">{fullEmail}</code>
+                        <button
+                          onClick={copyEmail}
+                          className="p-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5 text-gray-600 dark:text-gray-300" />}
+                        </button>
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="p-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                        >
+                          <Edit2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  <select
-                    value={selectedDomain}
-                    onChange={e => changeDomain(e.target.value as keyof typeof EMAIL_DOMAINS)}
-                    className="px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {Object.entries(EMAIL_DOMAINS).map(([key, domain]) => (
-                      <option key={key} value={key}>{domain}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selectedDomain}
+                      onChange={e => changeDomain(e.target.value as keyof typeof EMAIL_DOMAINS)}
+                      className="px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {Object.entries(EMAIL_DOMAINS).map(([key, domain]) => (
+                        <option key={key} value={key}>{domain}</option>
+                      ))}
+                    </select>
 
-                  <button
-                    onClick={() => checkEmails(true)}
-                    disabled={isRefreshing}
-                    className="p-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
-                  >
-                    <RefreshCw className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  </button>
+                    <button
+                      onClick={() => checkEmails(true)}
+                      disabled={isRefreshing}
+                      className="p-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </button>
 
-                  <button
-                    onClick={generateNewEmail}
-                    disabled={isGenerating}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                  </button>
+                    <button
+                      onClick={generateNewEmail}
+                      disabled={isGenerating}
+                      className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      New
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Email List */}
-            <div className="max-h-96 overflow-y-auto">
-              {isRefreshing ? (
-                <div className="p-10 text-center">
-                  <Loader2 className="w-8 h-8 mx-auto text-blue-600 animate-spin" />
-                </div>
-              ) : emails.length === 0 ? (
-                <EmptyInbox />
-              ) : (
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {emails.map(email => {
-                    const sender = email.mail_from.split('<')[0].trim();
-                    return (
-                      <button
-                        key={email.mail_id}
-                        onClick={() => openEmail(email)}
-                        className="w-full p-5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
-                      >
-                        <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-sm">
-                            {sender[0].toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <h4 className="font-semibold text-gray-900 dark:text-white truncate">
-                                {sender}
-                              </h4>
-                              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                                {email.mail_date}
-                              </span>
+              {/* Email List - Takes Remaining Space */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+                {isRefreshing ? (
+                  <div className="flex items-center justify-center h-32">
+                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                  </div>
+                ) : emails.length === 0 ? (
+                  <EmptyInbox />
+                ) : (
+                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {emails.map(email => {
+                      const sender = email.mail_from.split('<')[0].trim();
+                      return (
+                        <button
+                          key={email.mail_id}
+                          onClick={() => openEmail(email)}
+                          className="w-full p-5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-sm">
+                              {sender[0].toUpperCase()}
                             </div>
-                            <p className="font-medium text-gray-800 dark:text-gray-200 truncate">
-                              {email.mail_subject}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                              {email.mail_excerpt}
-                            </p>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+                                  {sender}
+                                </h4>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                  {email.mail_date}
+                                </span>
+                              </div>
+                              <p className="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                {email.mail_subject}
+                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
+                                {email.mail_excerpt}
+                              </p>
+                            </div>
+                            <button
+                              onClick={e => deleteEmail(email.mail_id, e)}
+                              className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-all"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </button>
                           </div>
-                          <button
-                            onClick={e => deleteEmail(email.mail_id, e)}
-                            className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-all"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </button>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {modalEmail && <EmailModal email={modalEmail} onClose={() => setModalEmail(null)} />}
+        {modalEmail && <EmailModal email={modalEmail} onClose={() => setModalEmail(null)} />}
+      </div>
     </>
   );
 };
@@ -471,7 +475,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         {/* Header */}
         <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -537,9 +541,9 @@ const App: React.FC = () => {
           </ErrorBoundary>
         </main>
 
-        {/* Footer */}
-        <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Footer - No mt-16 */}
+        <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
                 <div className="flex items-center gap-2 mb-4">
@@ -577,7 +581,7 @@ const App: React.FC = () => {
                 </ul>
               </div>
             </div>
-            <div className="mt-10 pt-8 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500">
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-center text-xs text-gray-500">
               © 2025 SnapMails. All rights reserved.
             </div>
           </div>
