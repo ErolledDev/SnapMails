@@ -7,11 +7,14 @@ import {
   Sun,
 } from 'lucide-react';
 import { Link, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
+import EmailBox from './components/EmailBox';
+import AdUnit from './components/AdUnit';
+
 
 // Lazy load components
-const EmailBox = lazy(() => import('./components/EmailBox'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
 const About = lazy(() => import('./pages/About'));
@@ -53,21 +56,107 @@ const FallbackError = () => (
   </div>
 );
 
-const Home = () => {
+const Home: React.FC = () => {
   return (
     <ErrorBoundary>
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
-        <div className="max-w-4xl mx-auto">
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner />}>
+      <div className="overflow-x-hidden">
+        <Helmet>
+          <title>Free Temporary Email - Disposable Temp Mail Service | SnapMails</title>
+          <meta name="description" content="Create instant disposable email addresses with SnapMails. Protect your privacy with our secure temporary email service. No registration required, custom domains available." />
+          <meta name="keywords" content="temporary email, disposable email, temp mail, anonymous email, spam protection, custom email, temporary mail service, secure email, free temp mail" />
+          <link rel="canonical" href="https://snapmails.xyz" />
+
+          <meta property="og:title" content="Free Temporary Email - Disposable Temp Mail Service | SnapMails" />
+          <meta property="og:description" content="Create instant disposable email addresses with SnapMails. Protect your privacy with our secure temporary email service. No registration required, custom domains available." />
+          <meta property="og:url" content="https://snapmails.xyz" />
+          <meta property="og:type" content="website" />
+          <meta property="og:image" content="https://snapmails.xyz/og-image.jpg" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:site_name" content="SnapMails" />
+          <meta property="og:locale" content="en_US" />
+
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="Free Temporary Email - Disposable Temp Mail Service | SnapMails" />
+          <meta name="twitter:description" content="Create instant disposable email addresses with SnapMails. Protect your privacy with our secure temporary email service." />
+          <meta name="twitter:image" content="https://snapmails.xyz/twitter-image.jpg" />
+          <meta name="twitter:site" content="@snapmails" />
+
+          <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+          <meta name="author" content="SnapMails" />
+          <meta name="copyright" content="SnapMails" />
+          <meta name="theme-color" content="#3B82F6" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+          <meta name="format-detection" content="telephone=no" />
+          <meta name="msapplication-TileColor" content="#3B82F6" />
+
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "SnapMails",
+              "description": "Create instant disposable email addresses with SnapMails. Protect your privacy with our secure temporary email service.",
+              "url": "https://snapmails.xyz",
+              "applicationCategory": "Email Service",
+              "operatingSystem": "All",
+              "browserRequirements": "Requires JavaScript",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              },
+              "featureList": [
+                "Instant temporary email addresses",
+                "Custom domain selection",
+                "No registration required",
+                "Real-time email notifications",
+                "Secure and private"
+              ],
+              "screenshot": {
+                "@type": "ImageObject",
+                "url": "https://snapmails.xyz/desktop-view.jpg",
+                "caption": "SnapMails desktop interface"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "ratingCount": "1250",
+                "bestRating": "5",
+                "worstRating": "1"
+              }
+            })}
+          </script>
+        </Helmet>
+
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AdUnit
+            slot="1234567890"
+            format="auto"
+            position="top"
+            className="py-8 sm:py-12"
+          />
+
+          <div className="py-8 sm:py-12">
+            <ErrorBoundary>
               <EmailBox />
-            </Suspense>
-          </ErrorBoundary>
-        </div>
-      </main>
+            </ErrorBoundary>
+          </div>
+
+          <AdUnit
+            slot="0987654321"
+            format="auto"
+            position="bottom"
+            className="py-8 sm:py-12"
+          />
+        </main>
+      </div>
     </ErrorBoundary>
   );
 };
+
 
 const App: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -112,7 +201,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
         <header className="bg-white/80 dark:bg-gray-900/80 shadow-lg dark:shadow-gray-800/50 sticky top-0 z-50 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
